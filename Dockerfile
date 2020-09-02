@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM nvidia/cuda:11.0-base-ubuntu16.04
 
 WORKDIR /usr/src/app
 
