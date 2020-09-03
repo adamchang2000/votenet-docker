@@ -6,6 +6,10 @@ run:
 
 command: ``docker run -v $PWD/votenet:/usr/src/app/votenet:z -d --rm adamchang2000/votenet-stuff``
 
+or if on Windows,
+
+command: ``docker run -v %cd%/votenet:/usr/src/app/votenet:z -d --rm adamchang2000/votenet-stuff``
+
 then run:
 
 command: ``docker ps``
