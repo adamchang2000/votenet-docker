@@ -1,0 +1,2 @@
+python train.py --dataset obj --modelpath D:\model_data --num_point=10000 --use_color --no_height --batch_size=4
+python eval.py --dataset obj --modelpath=D:\model_data2 --num_point=10000 --use_color --no_height --batch_size=4 --checkpoint_path=C:/Users/adam2/Desktop/votenet-docker/votenet/log/checkpoint.tar --dump_dir=dump

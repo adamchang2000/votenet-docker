@@ -43,6 +43,7 @@ parser.add_argument('--nms_iou', type=float, default=0.25, help='NMS IoU thresho
 parser.add_argument('--conf_thresh', type=float, default=0.05, help='Filter out predictions with obj prob less than it. [default: 0.05]')
 parser.add_argument('--faster_eval', action='store_true', help='Faster evaluation by skippling empty bounding box removal.')
 parser.add_argument('--shuffle_dataset', action='store_true', help='Shuffle the dataset (random order).')
+parser.add_argument('--modelpath', help='Path to directory containing .obj, and sample files, for obj training.')
 FLAGS = parser.parse_args()
 
 if FLAGS.use_cls_nms:
@@ -86,6 +87,17 @@ elif FLAGS.dataset == 'scannet':
     TEST_DATASET = ScannetDetectionDataset('val', num_points=NUM_POINT,
         augment=False,
         use_color=FLAGS.use_color, use_height=(not FLAGS.no_height))
+elif FLAGS.dataset == 'obj':
+    if not FLAGS.modelpath:
+        print('NO FILEPATH FOR OBJ TRAINING')
+        sys.exit(1)
+    sys.path.append(os.path.join(ROOT_DIR, 'object_tracking'))
+    from obj_dataset import OBJDetectionVotesDataset, MAX_NUM_OBJ
+    from model_util_obj import OBJDatasetConfig
+    DATASET_CONFIG = OBJDatasetConfig()
+    TEST_DATASET = OBJDetectionVotesDataset(FLAGS.modelpath, 'val', num_points=NUM_POINT,
+        augment=False,
+        use_color=FLAGS.use_color)
 else:
     print('Unknown dataset %s. Exiting...'%(FLAGS.dataset))
     exit(-1)

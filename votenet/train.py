@@ -41,7 +41,7 @@ from ap_helper import APCalculator, parse_predictions, parse_groundtruths
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', default='votenet', help='Model file name [default: votenet]')
-parser.add_argument('--dataset', default='sunrgbd', help='Dataset name. sunrgbd or scannet. [default: sunrgbd]')
+parser.add_argument('--dataset', default='obj', help='Dataset name. sunrgbd or scannet or obj. [default: obj]')
 parser.add_argument('--checkpoint_path', default=None, help='Model checkpoint path [default: None]')
 parser.add_argument('--log_dir', default='log', help='Dump dir to save model checkpoint [default: log]')
 parser.add_argument('--dump_dir', default=None, help='Dump dir to save sample outputs [default: None]')
@@ -63,6 +63,7 @@ parser.add_argument('--use_color', action='store_true', help='Use RGB color in i
 parser.add_argument('--use_sunrgbd_v2', action='store_true', help='Use V2 box labels for SUN RGB-D dataset')
 parser.add_argument('--overwrite', action='store_true', help='Overwrite existing log and dump folders.')
 parser.add_argument('--dump_results', action='store_true', help='Dump results.')
+parser.add_argument('--modelpath', help='Path to directory containing .obj, and sample files, for obj training.')
 FLAGS = parser.parse_args()
 
 # ------------------------------------------------------------------------- GLOBAL CONFIG BEG
@@ -134,6 +135,21 @@ elif FLAGS.dataset == 'scannet':
     TEST_DATASET = ScannetDetectionDataset('val', num_points=NUM_POINT,
         augment=False,
         use_color=FLAGS.use_color, use_height=(not FLAGS.no_height))
+
+elif FLAGS.dataset == 'obj':
+
+    if not FLAGS.modelpath:
+        print('NO FILEPATH FOR OBJ TRAINING')
+        sys.exit(1)
+
+    sys.path.append(os.path.join(ROOT_DIR, 'object_tracking'))
+    from obj_dataset import OBJDetectionVotesDataset, MAX_NUM_OBJ
+    from model_util_obj import OBJDatasetConfig
+    DATASET_CONFIG = OBJDatasetConfig()
+    TRAIN_DATASET = OBJDetectionVotesDataset(FLAGS.modelpath, split_set='train', num_points=NUM_POINT,
+        use_color=True, augment=True)
+    TEST_DATASET = OBJDetectionVotesDataset(FLAGS.modelpath, split_set='test', num_points=NUM_POINT,
+        use_color=True, augment=False)
 else:
     print('Unknown dataset %s. Exiting...'%(FLAGS.dataset))
     exit(-1)
