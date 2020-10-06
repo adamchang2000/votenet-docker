@@ -24,6 +24,7 @@ from datetime import datetime
 import argparse
 import importlib
 
+import open3d as o3d
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -160,9 +161,9 @@ else:
     exit(-1)
 print(len(TRAIN_DATASET), len(TEST_DATASET))
 TRAIN_DATALOADER = DataLoader(TRAIN_DATASET, batch_size=BATCH_SIZE,
-    shuffle=True, num_workers=4, worker_init_fn=my_worker_init_fn)
+    shuffle=True, num_workers=8, worker_init_fn=my_worker_init_fn)
 TEST_DATALOADER = DataLoader(TEST_DATASET, batch_size=BATCH_SIZE,
-    shuffle=True, num_workers=4, worker_init_fn=my_worker_init_fn)
+    shuffle=True, num_workers=8, worker_init_fn=my_worker_init_fn)
 print(len(TRAIN_DATALOADER), len(TEST_DATALOADER))
 
 # Init the model and optimzier

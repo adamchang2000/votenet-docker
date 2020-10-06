@@ -164,12 +164,12 @@ class OBJDetectionVotesDataset(Dataset):
         angle_classes3 = np.asarray([angle_classes[2]])
         angle_residuals3 = np.asarray([angle_residuals[2]])
 
-        print(angle_classes.shape)
-        print(angle_residuals.shape)
+        #print(angle_classes.shape)
+        #print(angle_residuals.shape)
 
-        print(angle_classes1, angle_residuals1)
-        print(angle_classes2, angle_residuals2)
-        print(angle_classes3, angle_residuals3)
+        #print(angle_classes1, angle_residuals1)
+        #print(angle_classes2, angle_residuals2)
+        #print(angle_classes3, angle_residuals3)
 
         size_classes = np.asarray([size_class])
         size_residuals = np.asarray([size_residual])
