@@ -39,6 +39,9 @@ def eulerAnglesToRotationMatrix(theta) :
 
 #scale make sure points of vertices are in meters
 def convert_obj_to_mesh(filename, scale = 1):
+
+	print('called convert obj to mesh')
+
 	scene = pywavefront.Wavefront(filename)
 	scene.parse()
 
@@ -55,6 +58,8 @@ def convert_obj_to_mesh(filename, scale = 1):
 			vertex_colors.append([material.diffuse[0], material.diffuse[1], material.diffuse[2]])
 			i += 6
 
+	print('retrieved data in obj to mesh')
+
 	vertex_normals_np = np.asarray(vertex_normals)
 	vertex_pos_np = np.asarray(vertex_pos)
 
@@ -67,8 +72,12 @@ def convert_obj_to_mesh(filename, scale = 1):
 	mesh.vertex_normals = o3d.utility.Vector3dVector(vertex_normals)
 	mesh.vertex_colors = o3d.utility.Vector3dVector(vertex_colors)
 
+	print('filled mesh in obj to mesh')
+
 	mesh.scale(scale, mesh.get_center())
 	mesh.translate(np.asarray([0, 0, 0]), False)
+
+	print('finished obj to mesh')
 
 	return mesh
 
