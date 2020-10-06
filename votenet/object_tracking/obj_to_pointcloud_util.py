@@ -74,7 +74,7 @@ def convert_obj_to_mesh(filename, scale = 1):
 
 	print('filled mesh in obj to mesh')
 
-	mesh.scale(scale, mesh.get_center())
+	mesh.scale(scale)
 	mesh.translate(np.asarray([0, 0, 0]), False)
 
 	print('finished obj to mesh')
