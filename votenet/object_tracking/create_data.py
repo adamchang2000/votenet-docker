@@ -4,7 +4,7 @@ from obj_to_pointcloud_util import *
 
 def main():
 	model_path = 'ps3_controller/model.obj'
-	output_path = 'D:/model_data_test/'
+	output_path = 'model_data/'
 	number_of_samples = 10
 	training_number = 8
 	testing_number = 2
@@ -22,8 +22,6 @@ def main():
 	model = convert_obj_to_mesh(model_path, scale)
 
 	for i in range(number_of_samples):
-
-		print('making sample: ', i)
 
 		pcld, bb, votes, euler_angles = get_perspective_data_from_mesh_seed(i, model, points=num_points)
 		box3d_centers = np.asarray([bb.get_center()])

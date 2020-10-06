@@ -40,7 +40,7 @@ def eulerAnglesToRotationMatrix(theta) :
 #scale make sure points of vertices are in meters
 def convert_obj_to_mesh(filename, scale = 1):
 
-	print('called convert obj to mesh')
+	#print('called convert obj to mesh')
 
 	scene = pywavefront.Wavefront(filename)
 	scene.parse()
@@ -58,7 +58,7 @@ def convert_obj_to_mesh(filename, scale = 1):
 			vertex_colors.append([material.diffuse[0], material.diffuse[1], material.diffuse[2]])
 			i += 6
 
-	print('retrieved data in obj to mesh')
+	#print('retrieved data in obj to mesh')
 
 	vertex_normals_np = np.asarray(vertex_normals)
 	vertex_pos_np = np.asarray(vertex_pos)
@@ -72,22 +72,22 @@ def convert_obj_to_mesh(filename, scale = 1):
 	mesh.vertex_normals = o3d.utility.Vector3dVector(vertex_normals)
 	mesh.vertex_colors = o3d.utility.Vector3dVector(vertex_colors)
 
-	print('filled mesh in obj to mesh')
+	#print('filled mesh in obj to mesh')
 
 	mesh.scale(scale)
 	mesh.translate(np.asarray([0, 0, 0]), False)
 
-	print('finished obj to mesh')
+	#print('finished obj to mesh')
 
 	return mesh
 
 def place_mesh(mesh, xyz, euler_angles):
-	print('place mesh called')
+	#print('place mesh called')
 	rotate_matrix_euler(euler_angles, mesh)
 	mesh.translate(xyz)
 
 def return_origin(mesh, xyz, euler_angles):
-	print('return origin called')
+	#print('return origin called')
 	mesh.translate(-1 * xyz)
 	invert_rotate_matrix_euler(euler_angles, mesh)
 
@@ -169,7 +169,7 @@ def sample_points(mesh, num_points, sample_strategy):
 #return pointcloud, bounding box, votes, euler_angles
 def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample_strategy='uniform random'):
 
-	print('perspective data called')
+	#print('perspective data called')
 
 	bb = get_bb(mesh)
 	place_mesh(mesh, xyz, euler_angles)
