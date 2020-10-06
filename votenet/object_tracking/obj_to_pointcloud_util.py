@@ -105,17 +105,17 @@ def get_bb(mesh):
 
 def rotate_matrix_euler(euler_angles, mesh):
 	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
-	mesh.rotate(eulerAnglesToRotationMatrix(euler_angles), mesh.get_center())
+	mesh.rotate(eulerAnglesToRotationMatrix(euler_angles))
 	return mesh
 
 def invert_rotate_matrix_euler(euler_angles, mesh):
 	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
-	mesh.rotate(eulerAnglesToRotationMatrix(euler_angles).T, mesh.get_center())
+	mesh.rotate(eulerAnglesToRotationMatrix(euler_angles).T)
 	return mesh
 
 def rotate_matrix_axis_angle(axis_angle, mesh):
 	#print('axis angle ', o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angle))
-	mesh.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angle), mesh.get_center())
+	mesh.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angle))
 	return mesh
 
 def get_x_vec(mesh):
