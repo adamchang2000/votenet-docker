@@ -190,7 +190,7 @@ def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample
 	np.random.shuffle(lst)
 	lst = lst[:points]
 
-	pointcloud = pointcloud.select_by_index(lst)
+	pointcloud = pointcloud.select_down_sample(lst)
 
 	votes = []
 
@@ -230,7 +230,7 @@ def get_perspective_data_from_mesh_axis_angles(mesh, xyz, axis_angles, points=20
 	np.random.shuffle(lst)
 	lst = lst[:points]
 
-	pointcloud = pointcloud.select_by_index(lst)
+	pointcloud = pointcloud.select_down_sample(lst)
 
 	votes = []
 
