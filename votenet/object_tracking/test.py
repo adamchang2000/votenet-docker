@@ -2,7 +2,18 @@ import open3d as o3d
 import numpy as np
 from obj_to_pointcloud_util import *
 
-file = 'D:/model_data2/50_data.npz'
+
+a = np.array([[ 0.20175413,  0.96682634, -0.15665918,],
+ [-0.7676377,   0.05675075, -0.63836644,],
+ [-0.60829896,  0.24905056,  0.75362205]])
+
+b = np.array([[ 0.20175413, -0.86978975, -0.45028997,],
+ [ 0.7676377,   0.42595728, -0.47884522,],
+ [ 0.60829896, -0.24905056,  0.75362205]])
+
+print(a @ b)
+
+file = 'D:/model_data_test/3_data.npz'
 data = np.load(file)
 
 pcld = o3d.geometry.PointCloud()
@@ -25,7 +36,9 @@ print(bb.get_max_bound() - bb.get_min_bound())
 
 print("\n ---------------------------- \n")
 
-rotate_matrix_euler(euler_angles, bb)
+#rotate_matrix_axis_angle(axis_angles, bb)
+
+bb.rotate(eulerAnglesToRotationMatrix(euler_angles), bb.get_center())
 
 print(bb.get_center())
 print(bb.get_max_bound() - bb.get_min_bound())
@@ -38,8 +51,6 @@ points = np.asarray(points)
 colors = np.asarray(colors)
 pcld.points = o3d.utility.Vector3dVector(points)
 pcld.colors = o3d.utility.Vector3dVector(colors)
-
-pcld.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle(np.array([1,1,0])), pcld.get_center())
 
 
 o3d.visualization.draw_geometries([pcld, bb])

@@ -8,6 +8,7 @@
 Author: Charles R. Qi and Or Litany
 """
 
+import math
 import os
 import sys
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,7 +26,7 @@ except:
 
 # Mesh IO
 import trimesh
-
+import open3d as o3d
 import matplotlib.pyplot as pyplot
 
 # ----------------------------------------
@@ -411,6 +412,68 @@ def write_oriented_bbox(scene_bbox, out_filename):
         trns[0:3, 3] = ctr
         trns[3,3] = 1.0            
         trns[0:3,0:3] = heading2rotmat(box[6])
+        box_trimesh_fmt = trimesh.creation.box(lengths, trns)
+        return box_trimesh_fmt
+
+    scene = trimesh.scene.Scene()
+    for box in scene_bbox:
+        scene.add_geometry(convert_oriented_box_to_trimesh_fmt(box))        
+    
+    mesh_list = trimesh.util.concatenate(scene.dump())
+    # save to ply file    
+    trimesh.io.export.export_mesh(mesh_list, out_filename, file_type='ply')
+    
+    return
+
+def write_oriented_bbox_6dof(scene_bbox, out_filename):
+    """Export oriented (around Z axis) scene bbox to meshes
+    Args:
+        scene_bbox: (N x 7 numpy array): xyz pos of center and 3 lengths (dx,dy,dz)
+            and heading angles: (axis angle)
+            Y forward, X right, Z upward. heading angle of positive X is 0,
+            heading angle of positive Y is 90 degrees.
+        out_filename: (string) filename
+    """
+
+    # Calculates Rotation Matrix given euler angles.
+    def eulerAnglesToRotationMatrix(theta) :
+        
+        R_x = np.array([[1,         0,                  0                   ],
+                        [0,         math.cos(theta[0]), -math.sin(theta[0]) ],
+                        [0,         math.sin(theta[0]), math.cos(theta[0])  ]
+                        ])
+            
+            
+                        
+        R_y = np.array([[math.cos(theta[1]),    0,      math.sin(theta[1])  ],
+                        [0,                     1,      0                   ],
+                        [-math.sin(theta[1]),   0,      math.cos(theta[1])  ]
+                        ])
+                    
+        R_z = np.array([[math.cos(theta[2]),    -math.sin(theta[2]),    0],
+                        [math.sin(theta[2]),    math.cos(theta[2]),     0],
+                        [0,                     0,                      1]
+                        ])
+                        
+                        
+        R = np.dot(R_z, np.dot( R_y, R_x ))
+
+        return R
+
+    def eulerangles2rotmat(euler_angles):
+        return eulerAnglesToRotationMatrix(euler_angles)
+
+    def axisangle2rotmat(angle, axis):
+        rotmat = o3d.geometry.get_rotation_matrix_from_axis_angle(axis * angle)
+        return rotmat
+
+    def convert_oriented_box_to_trimesh_fmt(box):
+        ctr = box[:3]
+        lengths = box[3:6]
+        trns = np.eye(4)
+        trns[0:3, 3] = ctr
+        trns[3,3] = 1.0            
+        trns[0:3,0:3] = eulerangles2rotmat(box[6:9])
         box_trimesh_fmt = trimesh.creation.box(lengths, trns)
         return box_trimesh_fmt
 

@@ -39,8 +39,21 @@ def decode_scores(net, end_points, num_class, num_heading_bin, num_size_cluster,
     end_points['size_residuals_normalized'] = size_residuals_normalized
     end_points['size_residuals'] = size_residuals_normalized * torch.from_numpy(mean_size_arr.astype(np.float32)).cuda().unsqueeze(0).unsqueeze(0)
 
-    sem_cls_scores = net_transposed[:,:,5+num_heading_bin*2+num_size_cluster*4:] # Bxnum_proposalx10
+    sem_cls_scores = net_transposed[:,:,5+num_heading_bin*2+num_size_cluster*4:5+num_heading_bin*2+num_size_cluster*4+num_class] # Bxnum_proposalx10
     end_points['sem_cls_scores'] = sem_cls_scores
+
+    heading_scores2 = net_transposed[:,:,5+num_heading_bin*2+num_size_cluster*4+num_class:5+num_heading_bin*2+num_size_cluster*4+num_class+num_heading_bin]
+    heading_residuals_normalized2 = net_transposed[:,:,5+num_heading_bin*2+num_size_cluster*4+num_class+num_heading_bin:5+num_heading_bin*2+num_size_cluster*4+num_class+num_heading_bin*2]
+    end_points['heading_scores2'] = heading_scores2 # Bxnum_proposalxnum_heading_bin
+    end_points['heading_residuals_normalized2'] = heading_residuals_normalized2 # Bxnum_proposalxnum_heading_bin (should be -1 to 1)
+    end_points['heading_residuals2'] = heading_residuals_normalized2 * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
+
+    heading_scores3 = net_transposed[:,:,5+num_heading_bin*2+num_size_cluster*4+num_class+num_heading_bin*2:5+num_heading_bin*2+num_size_cluster*4+num_class+num_heading_bin*3]
+    heading_residuals_normalized3 = net_transposed[:,:,5+num_heading_bin*2+num_size_cluster*4+num_class+num_heading_bin*3:5+num_heading_bin*2+num_size_cluster*4+num_class+num_heading_bin*4]
+    end_points['heading_scores3'] = heading_scores3 # Bxnum_proposalxnum_heading_bin
+    end_points['heading_residuals_normalized3'] = heading_residuals_normalized3 # Bxnum_proposalxnum_heading_bin (should be -1 to 1)
+    end_points['heading_residuals3'] = heading_residuals_normalized3 * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
+
     return end_points
 
 
@@ -59,7 +72,7 @@ class ProposalModule(nn.Module):
         # Vote clustering
         self.vote_aggregation = PointnetSAModuleVotes( 
                 npoint=self.num_proposal,
-                radius=0.1,
+                radius=0.3,
                 nsample=16,
                 mlp=[self.seed_feat_dim, 128, 128, 128],
                 use_xyz=True,
@@ -71,7 +84,9 @@ class ProposalModule(nn.Module):
         # heading class+residual (num_heading_bin*2), size class+residual(num_size_cluster*4)
         self.conv1 = torch.nn.Conv1d(128,128,1)
         self.conv2 = torch.nn.Conv1d(128,128,1)
-        self.conv3 = torch.nn.Conv1d(128,2+3+num_heading_bin*2+num_size_cluster*4+self.num_class,1)
+        #self.conv3 = torch.nn.Conv1d(128,2+3+num_heading_bin*2+num_size_cluster*4+self.num_class,1)
+        #objectness scores (2), center residual (3), heading class + residual (num_heading_bin * 2), size class + residual (num_size_cluster * 4) + 2 more heading class and residual
+        self.conv3 = torch.nn.Conv1d(128,2+3+num_heading_bin*2+num_size_cluster*4+self.num_class+num_heading_bin*4,1)
         self.bn1 = torch.nn.BatchNorm1d(128)
         self.bn2 = torch.nn.BatchNorm1d(128)
 

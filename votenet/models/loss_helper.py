@@ -107,6 +107,40 @@ def compute_objectness_loss(end_points):
 
     return objectness_loss, objectness_label, objectness_mask, object_assignment
 
+def compute_rotation_loss(end_points, object_assignment, objectness_label, num_heading_bin, batch_size, n=3):
+
+    lst = list(range(1, n+1))
+    lst[0] = ''
+
+    heading_class_loss = 0
+    heading_residual_normalized_loss = 0
+
+    for suff in lst:
+        heading_scores_key = 'heading_scores' + str(suff)
+        heading_residuals_key = 'heading_residuals_normalized' + str(suff)
+
+        heading_class_label_key = 'heading_class_label' + str(suff)
+        heading_residual_label_key = 'heading_residual_label' + str(suff)
+
+        # Compute heading loss
+        #print('shapes ', end_points['heading_class_label'].shape, object_assignment.shape)
+        heading_class_label = torch.gather(end_points[heading_class_label_key], 1, object_assignment) # select (B,K) from (B,K2)
+        criterion_heading_class = nn.CrossEntropyLoss(reduction='none')
+        heading_class_loss_temp = criterion_heading_class(end_points[heading_scores_key].transpose(2,1), heading_class_label) # (B,K)
+        heading_class_loss += torch.sum(heading_class_loss_temp * objectness_label)/(torch.sum(objectness_label)+1e-6)
+
+        heading_residual_label = torch.gather(end_points[heading_residual_label_key], 1, object_assignment) # select (B,K) from (B,K2)
+        heading_residual_normalized_label = heading_residual_label / (np.pi/num_heading_bin)
+
+        # Ref: https://discuss.pytorch.org/t/convert-int-into-one-hot-format/507/3
+        heading_label_one_hot = torch.cuda.FloatTensor(batch_size, heading_class_label.shape[1], num_heading_bin).zero_()
+        heading_label_one_hot.scatter_(2, heading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
+        heading_residual_normalized_loss_temp = huber_loss(torch.sum(end_points[heading_residuals_key]*heading_label_one_hot, -1) - heading_residual_normalized_label, delta=1.0) # (B,K)
+        heading_residual_normalized_loss += torch.sum(heading_residual_normalized_loss_temp*objectness_label)/(torch.sum(objectness_label)+1e-6)
+
+
+    return heading_class_loss, heading_residual_normalized_loss
+
 def compute_box_and_sem_cls_loss(end_points, config):
     """ Compute 3D bounding box and semantic classification loss.
 
@@ -142,21 +176,7 @@ def compute_box_and_sem_cls_loss(end_points, config):
         torch.sum(dist2*box_label_mask)/(torch.sum(box_label_mask)+1e-6)
     center_loss = centroid_reg_loss1 + centroid_reg_loss2
 
-    # Compute heading loss
-    #print('shapes ', end_points['heading_class_label'].shape, object_assignment.shape)
-    heading_class_label = torch.gather(end_points['heading_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
-    criterion_heading_class = nn.CrossEntropyLoss(reduction='none')
-    heading_class_loss = criterion_heading_class(end_points['heading_scores'].transpose(2,1), heading_class_label) # (B,K)
-    heading_class_loss = torch.sum(heading_class_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
-
-    heading_residual_label = torch.gather(end_points['heading_residual_label'], 1, object_assignment) # select (B,K) from (B,K2)
-    heading_residual_normalized_label = heading_residual_label / (np.pi/num_heading_bin)
-
-    # Ref: https://discuss.pytorch.org/t/convert-int-into-one-hot-format/507/3
-    heading_label_one_hot = torch.cuda.FloatTensor(batch_size, heading_class_label.shape[1], num_heading_bin).zero_()
-    heading_label_one_hot.scatter_(2, heading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
-    heading_residual_normalized_loss = huber_loss(torch.sum(end_points['heading_residuals_normalized']*heading_label_one_hot, -1) - heading_residual_normalized_label, delta=1.0) # (B,K)
-    heading_residual_normalized_loss = torch.sum(heading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
+    heading_class_loss, heading_residual_normalized_loss = compute_rotation_loss(end_points, object_assignment, objectness_label, num_heading_bin, batch_size)
 
     # Compute size loss
     size_class_label = torch.gather(end_points['size_class_label'], 1, object_assignment) # select (B,K) from (B,K2)

@@ -1,4 +1,5 @@
 cmake
+numpy==1.18
 scikit-build
 matplotlib
 opencv-python

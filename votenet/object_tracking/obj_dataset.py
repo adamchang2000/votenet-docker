@@ -37,7 +37,6 @@ DC = OBJDatasetConfig() # dataset specific config
 MAX_NUM_OBJ = 1 # maximum number of objects allowed per scene
 MEAN_COLOR_RGB = np.array([0.5,0.5,0.5]) # sunrgbd color is in 0~1
 
-
 class OBJDetectionVotesDataset(Dataset):
     def __init__(self, model_path, split_set='train', num_points=10000, use_color=False, augment=True, dropout_rate=0.2):
 
@@ -88,6 +87,8 @@ class OBJDetectionVotesDataset(Dataset):
         euler_angles = data['euler_angles']
         #axis_angles = data['axis_angles']
 
+        #print('xd ', axis_angles)
+
         votes = data['votes']
         
         #points = np.asarray(pcld.points)
@@ -107,11 +108,11 @@ class OBJDetectionVotesDataset(Dataset):
         if self.augment:
             #randomly scale by +/-15%
             scale_ratio = np.random.random()*0.3+0.85
-            scale_ratio_shaped = np.expand_dims(np.tile(scale_ratio,3),0)
-            point_cloud[:,0:3] *= scale_ratio_shaped
-            box3d_centers *= scale_ratio_shaped
-            box3d_sizes *= scale_ratio_shaped
-            votes *= scale_ratio_shaped
+            scale_ratio = np.expand_dims(np.tile(scale_ratio,3),0)
+            point_cloud[:,0:3] *= scale_ratio
+            box3d_centers *= scale_ratio
+            box3d_sizes *= scale_ratio
+            votes *= scale_ratio
 
             #random dropout, drop self.dropout_rate
             n = int(self.num_points * (1 - self.dropout_rate))
@@ -124,8 +125,8 @@ class OBJDetectionVotesDataset(Dataset):
         Returns a dict with following keys:
             point_clouds: (N,3+C)
             center_label: (MAX_NUM_OBJ,3) for GT box center XYZ
-            heading_class_label: (MAX_NUM_OBJ,) with int values in 0,...,NUM_HEADING_BIN-1
-            heading_residual_label: (MAX_NUM_OBJ,)
+            heading_class_label: (MAX_NUM_OBJ,3) with int values in 0,...,NUM_HEADING_BIN-1
+            heading_residual_label: (MAX_NUM_OBJ,3)
             size_classe_label: (MAX_NUM_OBJ,) with int values in 0,...,NUM_SIZE_CLUSTER
             size_residual_label: (MAX_NUM_OBJ,3)
             sem_cls_label: (MAX_NUM_OBJ,) semantic class index
@@ -139,8 +140,14 @@ class OBJDetectionVotesDataset(Dataset):
         """
 
         
-        angle_class_and_residuals = [DC.angle2class(euler_angles[2])]
-        #angle_class_and_residuals = [[DC.angle2class(axis_angles[i]) for i in 3]]
+        #angle_class_and_residuals = [DC.angle2class(euler_angles[2])]
+        angle_class_and_residuals = [DC.angle2class(x) for x in euler_angles]
+
+        #angle = np.linalg.norm(axis_angles)
+        #axis_angles /= angle
+        #axis_angles = np.asarray([axis_angles])
+        #angle_class_and_residuals = [DC.angle2class(angle)]
+
         size_class, size_residual = DC.size2class(box3d_sizes[0], DC.class2type[0])
 
         #print(angle_class_and_residuals)
@@ -148,11 +155,21 @@ class OBJDetectionVotesDataset(Dataset):
         angle_classes = np.asarray([x[0] for x in angle_class_and_residuals])
         angle_residuals = np.asarray([x[1] for x in angle_class_and_residuals])
 
-        #angle_classes = np.asarray([[x[0] for x in acr] for acr in angle_class_and_residuals])
-        #angle_residuals = np.asarray([[x[1] for x in acr] for acr in angle_class_and_residuals])
+        angle_classes1 = np.asarray([angle_classes[0]])
+        angle_residuals1 = np.asarray([angle_residuals[0]])
 
-        #print(angle_classes.shape)
-        #print(angle_residuals.shape)
+        angle_classes2 = np.asarray([angle_classes[1]])
+        angle_residuals2 = np.asarray([angle_residuals[1]])
+
+        angle_classes3 = np.asarray([angle_classes[2]])
+        angle_residuals3 = np.asarray([angle_residuals[2]])
+
+        print(angle_classes.shape)
+        print(angle_residuals.shape)
+
+        print(angle_classes1, angle_residuals1)
+        print(angle_classes2, angle_residuals2)
+        print(angle_classes3, angle_residuals3)
 
         size_classes = np.asarray([size_class])
         size_residuals = np.asarray([size_residual])
@@ -169,12 +186,13 @@ class OBJDetectionVotesDataset(Dataset):
         ret_dict = {}
         ret_dict['point_clouds'] = point_cloud.astype(np.float32)
         ret_dict['center_label'] = box3d_centers.astype(np.float32)
-        ret_dict['heading_class_label'] = angle_classes.astype(np.int64)
-        ret_dict['heading_residual_label'] = angle_residuals.astype(np.float32)
-
-        #print(ret_dict['heading_class_label'].shape)
-        #print(ret_dict['heading_residual_label'].shape)
-
+        ret_dict['heading_class_label'] = angle_classes1.astype(np.int64)
+        ret_dict['heading_residual_label'] = angle_residuals1.astype(np.float32)
+        ret_dict['heading_class_label2'] = angle_classes2.astype(np.int64)
+        ret_dict['heading_residual_label2'] = angle_residuals2.astype(np.float32)
+        ret_dict['heading_class_label3'] = angle_classes3.astype(np.int64)
+        ret_dict['heading_residual_label3'] = angle_residuals3.astype(np.float32)
+        #ret_dict['rotation_vector_label'] = axis_angles.astype(np.float32)
         ret_dict['size_class_label'] = size_classes.astype(np.int64)
         ret_dict['size_residual_label'] = size_residuals.astype(np.float32)
         ret_dict['sem_cls_label'] = semantic_class_index.astype(np.int64)
@@ -205,8 +223,8 @@ def viz_obb(pc, label, mask, angle_classes, angle_residuals,
     pc: (N,3)
     label: (K,3)  K == MAX_NUM_OBJ
     mask: (K,)
-    angle_classes: (K,)
-    angle_residuals: (K,)
+    angle_classes: (K,3)
+    angle_residuals: (K,3)
     size_classes: (K,)
     size_residuals: (K,3)
     """
@@ -214,16 +232,18 @@ def viz_obb(pc, label, mask, angle_classes, angle_residuals,
     K = label.shape[0]
     for i in range(K):
         if mask[i] == 0: continue
-        obb = np.zeros(7)
+        #obb = np.zeros(7)
+        obb = np.zeros(9)
         obb[0:3] = label[i,0:3]
-        heading_angle = DC.class2angle(angle_classes[i], angle_residuals[i])
-        print('xd', heading_angle)
+        print(angle_classes[i])
+        heading_angles = [DC.class2angle(angle_classes[i][k], angle_residuals[i][k]) for k in range(3)]
         box_size = DC.class2size(size_classes[i], size_residuals[i])
         obb[3:6] = box_size
-        obb[6] = heading_angle
+        obb[6:9] = heading_angles
         print(obb)
         oriented_boxes.append(obb)
-    pc_util.write_oriented_bbox(oriented_boxes, 'gt_obbs.ply')
+    #pc_util.write_oriented_bbox(oriented_boxes, 'gt_obbs.ply')
+    pc_util.write_oriented_bbox_6dof(oriented_boxes, 'gt_obbs.ply')
     pc_util.write_ply(label[mask==1,:], 'gt_centroids.ply')
 
 def get_sem_cls_statistics():
@@ -245,11 +265,11 @@ def get_sem_cls_statistics():
 
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
-    d = OBJDetectionVotesDataset(sys.argv[1], use_color=True, augment=True)
-    sample = d[150]
+    d = OBJDetectionVotesDataset(sys.argv[1], num_points=8000, use_color=True, augment=True)
+    sample = d[5]
     print(sample['vote_label'].shape, sample['vote_label_mask'].shape)
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
     viz_obb(sample['point_clouds'], sample['center_label'], sample['box_label_mask'],
-        sample['heading_class_label'], sample['heading_residual_label'],
+        sample['heading_class_label'], sample['heading_residual_label'], 
         sample['size_class_label'], sample['size_residual_label'])

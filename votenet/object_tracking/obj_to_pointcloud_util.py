@@ -10,8 +10,8 @@ pywavefront.configure_logging(
     logging.ERROR
 )
 
-format = '%(asctime)s.%(msecs)03d %(levelname)-.1s [%(name)s][%(threadName)s] %(message)s'
-logging.basicConfig(format=format, level=logging.DEBUG)
+#format = '%(asctime)s.%(msecs)03d %(levelname)-.1s [%(name)s][%(threadName)s] %(message)s'
+#logging.basicConfig(format=format, level=logging.DEBUG)
 
 # Calculates Rotation Matrix given euler angles.
 def eulerAnglesToRotationMatrix(theta) :
@@ -77,18 +77,17 @@ def place_mesh(mesh, xyz, euler_angles):
 	rotate_matrix_euler(euler_angles, mesh)
 	mesh.translate(xyz)
 
+def return_origin(mesh, xyz, euler_angles):
+	mesh.translate(-1 * xyz)
+	invert_rotate_matrix_euler(euler_angles, mesh)
+
 def place_mesh_axis_angles(mesh, xyz, axis_angles):
 	rotate_matrix_axis_angle(axis_angles, mesh)
 	mesh.translate(xyz)
 
-def return_origin(mesh, xyz, euler_angles):
-	mesh.translate(-1 * xyz)
-	rotate_matrix_euler(-1 * euler_angles, mesh)
-
-
 def return_origin_axis_angles(mesh, xyz, axis_angles):
 	mesh.translate(-1 * xyz)
-	rotate_matrix_axis_angle(-1 * euler_angles, mesh)
+	rotate_matrix_axis_angle(-1 * axis_angles, mesh)
 
 def get_bb(mesh):
 	bb = mesh.get_axis_aligned_bounding_box()
@@ -97,6 +96,11 @@ def get_bb(mesh):
 def rotate_matrix_euler(euler_angles, mesh):
 	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
 	mesh.rotate(eulerAnglesToRotationMatrix(euler_angles), mesh.get_center())
+	return mesh
+
+def invert_rotate_matrix_euler(euler_angles, mesh):
+	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
+	mesh.rotate(eulerAnglesToRotationMatrix(euler_angles).T, mesh.get_center())
 	return mesh
 
 def rotate_matrix_axis_angle(axis_angle, mesh):
@@ -139,14 +143,14 @@ def get_z_vec(mesh):
 
 def sample_points(mesh, num_points, sample_strategy):
 	if sample_strategy not in ['uniform random', 'uniform grid']:
-		logging.error('%s not uniform random or uniform grid' % sample_strategy)
+		print('%s not uniform random or uniform grid' % sample_strategy)
 		sys.exit(1)
 
 	if sample_strategy == 'uniform random':
 		pointcloud = mesh.sample_points_uniformly(num_points)
 
 	elif sample_strategy == 'uniform grid':
-		logging.debug('dont know if uniform grid works, just exit for now')
+		print('dont know if uniform grid works, just exit for now')
 		sys.exit(1)
 		pointcloud = mesh.sample_points_poisson_disk(num_points)
 
@@ -154,9 +158,11 @@ def sample_points(mesh, num_points, sample_strategy):
 
 #return pointcloud, bounding box, votes, euler_angles
 def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample_strategy='uniform random'):
-	place_mesh(mesh, xyz, euler_angles)
 
 	bb = get_bb(mesh)
+	place_mesh(mesh, xyz, euler_angles)
+
+	bb.translate(xyz)
 
 	#multiply points by 2 for more visible points
 	factor = 5
@@ -185,14 +191,22 @@ def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample
 
 #return pointcloud, bounding box, votes, axis_angles
 def get_perspective_data_from_mesh_axis_angles(mesh, xyz, axis_angles, points=20000, sample_strategy='uniform random'):
-	place_mesh_axis_angles(mesh, xyz, axis_angles)
 
 	bb = get_bb(mesh)
+	place_mesh_axis_angles(mesh, xyz, axis_angles)
 
+	bb.translate(xyz)
+
+	print('mesh center ', mesh.get_center())
+	print('bb center ', bb.get_center())
+	
 	#multiply points by 2 for more visible points
 	factor = 5
 	while True:
 		pointcloud = sample_points(mesh, points * factor, sample_strategy)
+
+		o3d.visualization.draw_geometries([pcld])
+
 		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 10000)
 
 		if len(lst) < points:
@@ -211,35 +225,39 @@ def get_perspective_data_from_mesh_axis_angles(mesh, xyz, axis_angles, points=20
 	for pt in pointcloud.points:
 		votes.append(bb.get_center() - pt)
 
-	return_origin(mesh, xyz, axis_angles)
+	return_origin_axis_angles(mesh, xyz, axis_angles)
 
 	return pointcloud, bb, np.asarray(votes), axis_angles
 
 #return pointcloud, bb, votes, axis angles
 def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strategy='uniform random'):
 	np.random.seed(seed)
-	axis_angles = np.random.rand(3)
-	axis_angles = axis_angles / np.linalg.norm(axis_angles)
-	axis_angles *= np.random.uniform(0, 1) * 2 * np.pi
-	#euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
-	#euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
-	#euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
+	#axis_angles = np.array([1, 0, 0])
+	# axis_angles = np.array([0, 0, 1])
+	# axis_angles = axis_angles / np.linalg.norm(axis_angles)
+	# axis_angles *= (-np.pi + (np.random.uniform(0, 1) * 2 * np.pi))
+
+	euler_angles = np.zeros(3)
+	euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
+	euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
+	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
 	xyz = [0, 0, 0]
 	xyz[0] = np.random.uniform(-3, 3)
 	xyz[1] = np.random.uniform(0.3, 4)
 	xyz[2] = np.random.uniform(-3, 3)
 
-	return get_perspective_data_from_mesh_axis_angles(mesh, np.asarray(xyz), np.asarray(axis_angles), points, sample_strategy)
+	#return get_perspective_data_from_mesh_axis_angles(mesh, np.asarray(xyz), np.asarray(axis_angles), points, sample_strategy)
+	return get_perspective_data_from_mesh(mesh, np.asarray(xyz), np.asarray(euler_angles), points, sample_strategy)
 
 def main():
 	parser = argparse.ArgumentParser(description='Extract a mesh and data from an obj')
 	parser.add_argument('--filename', default='ps3_controller/model.obj', help='file path to obj')
-	parser.add_argument('-n', dest='points', default=20000, type=int, help='number of points to sample, default = 20k')
+	parser.add_argument('-n', dest='points', default=10000, type=int, help='number of points to sample, default = 20k')
 	parser.add_argument('-s', dest='sample_strategy', default='uniform random', help='point sampling strategy, available: uniform random, uniform grid')
 
 	args = parser.parse_args()
-	logging.info('starting processing %s' % args.filename)
+	print('starting processing %s' % args.filename)
 
 	mesh = convert_obj_to_mesh(args.filename, 0.001)
 	
@@ -247,11 +265,14 @@ def main():
 
 	#o3d.visualization.draw_geometries([pcld, bb])
 
-	pcld, bb, votes, axis_angles = get_perspective_data_from_mesh_seed(1, mesh, args.points, args.sample_strategy)
+	pcld, bb, votes, euler_angles = get_perspective_data_from_mesh_seed(3, mesh, args.points, args.sample_strategy)
 
-	print(axis_angles)
+	bb = o3d.geometry.OrientedBoundingBox.create_from_axis_aligned_bounding_box(bb)
+
+	bb.rotate(eulerAnglesToRotationMatrix(euler_angles), bb.get_center())
 
 	o3d.visualization.draw_geometries([pcld, bb])
+
 
 if __name__ == "__main__":
 	main()
