@@ -22,6 +22,9 @@ def main():
 	model = convert_obj_to_mesh(model_path, scale)
 
 	for i in range(number_of_samples):
+
+		print('making sample: ', i)
+
 		pcld, bb, votes, euler_angles = get_perspective_data_from_mesh_seed(i, model, points=num_points)
 		box3d_centers = np.asarray([bb.get_center()])
 		box3d_sizes = np.asarray([bb.get_max_bound() - bb.get_min_bound()])

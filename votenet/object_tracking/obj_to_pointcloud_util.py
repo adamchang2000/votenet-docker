@@ -1,6 +1,5 @@
 import pywavefront
 import numpy as np
-from pywavefront import visualization
 import open3d as o3d
 import argparse
 import logging
@@ -74,10 +73,12 @@ def convert_obj_to_mesh(filename, scale = 1):
 	return mesh
 
 def place_mesh(mesh, xyz, euler_angles):
+	print('place mesh called')
 	rotate_matrix_euler(euler_angles, mesh)
 	mesh.translate(xyz)
 
 def return_origin(mesh, xyz, euler_angles):
+	print('return origin called')
 	mesh.translate(-1 * xyz)
 	invert_rotate_matrix_euler(euler_angles, mesh)
 
@@ -158,6 +159,8 @@ def sample_points(mesh, num_points, sample_strategy):
 
 #return pointcloud, bounding box, votes, euler_angles
 def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample_strategy='uniform random'):
+
+	print('perspective data called')
 
 	bb = get_bb(mesh)
 	place_mesh(mesh, xyz, euler_angles)
