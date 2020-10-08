@@ -236,7 +236,7 @@ def get_3d_box(box_size, heading_angle, heading_angle2, heading_angle3, center):
         output (8,3) array for 3D box cornders
         Similar to utils/compute_orientation_3d
     '''
-    R = roty([heading_angle, heading_angle2, heading_angle3])
+    R = eulerAnglesToRotationMatrix([heading_angle, heading_angle2, heading_angle3])
     l,w,h = box_size
     x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
     y_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
