@@ -50,6 +50,17 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
     pred_heading_residual = torch.gather(end_points['heading_residuals'], 2, pred_heading_class.unsqueeze(-1)) # B,num_proposal,1
     pred_heading_class = pred_heading_class.detach().cpu().numpy() # B,num_proposal
     pred_heading_residual = pred_heading_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal
+
+    pred_heading_class2 = torch.argmax(end_points['heading_scores2'], -1) # B,num_proposal
+    pred_heading_residual2 = torch.gather(end_points['heading_residuals2'], 2, pred_heading_class2.unsqueeze(-1)) # B,num_proposal,1
+    pred_heading_class2 = pred_heading_class2.detach().cpu().numpy() # B,num_proposal
+    pred_heading_residual2 = pred_heading_residual2.squeeze(2).detach().cpu().numpy() # B,num_proposal
+
+    pred_heading_class3 = torch.argmax(end_points['heading_scores'], -1) # B,num_proposal
+    pred_heading_residual3 = torch.gather(end_points['heading_residuals'], 2, pred_heading_class3.unsqueeze(-1)) # B,num_proposal,1
+    pred_heading_class3 = pred_heading_class3.detach().cpu().numpy() # B,num_proposal
+    pred_heading_residual3 = pred_heading_residual3.squeeze(2).detach().cpu().numpy() # B,num_proposal
+
     pred_size_class = torch.argmax(end_points['size_scores'], -1) # B,num_proposal
     pred_size_residual = torch.gather(end_points['size_residuals'], 2, pred_size_class.unsqueeze(-1).unsqueeze(-1).repeat(1,1,1,3)) # B,num_proposal,1,3
     pred_size_residual = pred_size_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal,3
@@ -78,15 +89,16 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
             num_proposal = pred_center.shape[1]
             obbs = []
             for j in range(num_proposal):
-                obb = config.param2obb(pred_center[i,j,0:3], pred_heading_class[i,j], pred_heading_residual[i,j],
+                obb = config.param2obb(pred_center[i,j,0:3], [[pred_heading_class[i,j], pred_heading_residual[i,j]], [pred_heading_class2[i,j], pred_heading_residual2[i,j]], 
+                    [pred_heading_class3[i,j], pred_heading_residual3[i,j]]],
                                 pred_size_class[i,j], pred_size_residual[i,j])
                 obbs.append(obb)
             if len(obbs)>0:
                 obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
-                pc_util.write_oriented_bbox(obbs[objectness_prob>DUMP_CONF_THRESH,:], os.path.join(dump_dir, '%06d_pred_confident_bbox.ply'%(idx_beg+i)))
-                pc_util.write_oriented_bbox(obbs[np.logical_and(objectness_prob>DUMP_CONF_THRESH, pred_mask[i,:]==1),:], os.path.join(dump_dir, '%06d_pred_confident_nms_bbox.ply'%(idx_beg+i)))
-                pc_util.write_oriented_bbox(obbs[pred_mask[i,:]==1,:], os.path.join(dump_dir, '%06d_pred_nms_bbox.ply'%(idx_beg+i)))
-                pc_util.write_oriented_bbox(obbs, os.path.join(dump_dir, '%06d_pred_bbox.ply'%(idx_beg+i)))
+                pc_util.write_oriented_bbox_6dof(obbs[objectness_prob>DUMP_CONF_THRESH,:], os.path.join(dump_dir, '%06d_pred_confident_bbox.ply'%(idx_beg+i)))
+                pc_util.write_oriented_bbox_6dof(obbs[np.logical_and(objectness_prob>DUMP_CONF_THRESH, pred_mask[i,:]==1),:], os.path.join(dump_dir, '%06d_pred_confident_nms_bbox.ply'%(idx_beg+i)))
+                pc_util.write_oriented_bbox_6dof(obbs[pred_mask[i,:]==1,:], os.path.join(dump_dir, '%06d_pred_nms_bbox.ply'%(idx_beg+i)))
+                pc_util.write_oriented_bbox_6dof(obbs, os.path.join(dump_dir, '%06d_pred_bbox.ply'%(idx_beg+i)))
 
     # Return if it is at inference time. No dumping of groundtruths
     if inference_switch:
@@ -97,6 +109,13 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
     gt_mask = end_points['box_label_mask'].cpu().numpy() # B,K2
     gt_heading_class = end_points['heading_class_label'].cpu().numpy() # B,K2
     gt_heading_residual = end_points['heading_residual_label'].cpu().numpy() # B,K2
+
+    gt_heading_class2 = end_points['heading_class_label2'].cpu().numpy() # B,K2
+    gt_heading_residual2 = end_points['heading_residual_label2'].cpu().numpy() # B,K2
+
+    gt_heading_class3 = end_points['heading_class_label3'].cpu().numpy() # B,K2
+    gt_heading_residual3 = end_points['heading_residual_label3'].cpu().numpy() # B,K2
+
     gt_size_class = end_points['size_class_label'].cpu().numpy() # B,K2
     gt_size_residual = end_points['size_residual_label'].cpu().numpy() # B,K2,3
     objectness_label = end_points['objectness_label'].detach().cpu().numpy() # (B,K,)
@@ -114,12 +133,13 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
         obbs = []
         for j in range(gt_center.shape[1]):
             if gt_mask[i,j] == 0: continue
-            obb = config.param2obb(gt_center[i,j,0:3], gt_heading_class[i,j], gt_heading_residual[i,j],
+            obb = config.param2obb(gt_center[i,j,0:3], [[gt_heading_class[i,j], gt_heading_residual[i,j]], [gt_heading_class2[i,j], gt_heading_residual2[i,j]], 
+                [gt_heading_class3[i,j], gt_heading_residual3[i,j]]],
                             gt_size_class[i,j], gt_size_residual[i,j])
             obbs.append(obb)
         if len(obbs)>0:
             obbs = np.vstack(tuple(obbs)) # (num_gt_objects, 7)
-            pc_util.write_oriented_bbox(obbs, os.path.join(dump_dir, '%06d_gt_bbox.ply'%(idx_beg+i)))
+            pc_util.write_oriented_bbox_6dof(obbs, os.path.join(dump_dir, '%06d_gt_bbox.ply'%(idx_beg+i)))
 
     # OPTIONALL, also dump prediction and gt details
     if 'batch_pred_map_cls' in end_points:
