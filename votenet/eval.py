@@ -12,6 +12,8 @@ import numpy as np
 from datetime import datetime
 import argparse
 import importlib
+
+import open3d as o3d
 import torch
 import torch.nn as nn
 import torch.optim as optim

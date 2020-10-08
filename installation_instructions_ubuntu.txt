@@ -7,5 +7,13 @@ sudo tar xzf Python-3.7.8.tgz
 sudo ./configure --enable-optimizations
 sudo make altinstall
 
+pip3.7 install -r requirements.txt
+
 cd pointnet2
 sudo python3.7 setup.py install
+
+#install open3d xd
+pip3 install open3d==0.9
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt-get update
+sudo apt-get upgrade libstdc++6

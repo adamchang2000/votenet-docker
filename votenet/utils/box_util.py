@@ -206,13 +206,37 @@ def roty_batch(t):
     output[...,2,2] = c
     return output
 
+# Calculates Rotation Matrix given euler angles.
+def eulerAnglesToRotationMatrix(theta) :
+    
+    R_x = np.array([[1,         0,                  0                   ],
+                    [0,         math.cos(theta[0]), -math.sin(theta[0]) ],
+                    [0,         math.sin(theta[0]), math.cos(theta[0])  ]
+                    ])
+        
+        
+                    
+    R_y = np.array([[math.cos(theta[1]),    0,      math.sin(theta[1])  ],
+                    [0,                     1,      0                   ],
+                    [-math.sin(theta[1]),   0,      math.cos(theta[1])  ]
+                    ])
+                
+    R_z = np.array([[math.cos(theta[2]),    -math.sin(theta[2]),    0],
+                    [math.sin(theta[2]),    math.cos(theta[2]),     0],
+                    [0,                     0,                      1]
+                    ])
+                    
+                    
+    R = np.dot(R_z, np.dot( R_y, R_x ))
 
-def get_3d_box(box_size, heading_angle, center):
+    return R
+
+def get_3d_box(box_size, heading_angle, heading_angle2, heading_angle3, center):
     ''' box_size is array(l,w,h), heading_angle is radius clockwise from pos x axis, center is xyz of box center
         output (8,3) array for 3D box cornders
         Similar to utils/compute_orientation_3d
     '''
-    R = roty(heading_angle)
+    R = roty([heading_angle, heading_angle2, heading_angle3])
     l,w,h = box_size
     x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
     y_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
