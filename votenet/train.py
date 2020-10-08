@@ -200,7 +200,14 @@ it = -1 # for the initialize value of `LambdaLR` and `BNMomentumScheduler`
 start_epoch = 0
 if CHECKPOINT_PATH is not None and os.path.isfile(CHECKPOINT_PATH):
     checkpoint = torch.load(CHECKPOINT_PATH)
-    net.load_state_dict(checkpoint['model_state_dict'])
+
+    if torch.cuda.device_count() > 1:
+        parallel_model_state_dict = {}
+        for key, value in checkpoint['model_state_dict'].items():
+            parallel_model_state_dict['module.' + key] = value
+        net.load_state_dict(parallel_model_state_dict)
+    else:
+        net.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     start_epoch = checkpoint['epoch']
     log_string("-> loaded checkpoint %s (epoch: %d)"%(CHECKPOINT_PATH, start_epoch))
