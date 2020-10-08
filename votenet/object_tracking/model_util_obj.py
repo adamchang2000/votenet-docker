@@ -67,6 +67,9 @@ class OBJDatasetConfig(object):
     def param2obb(self, center, heading_classes_and_residuals, size_class, size_residual):
 
         heading_angle = np.array([self.class2angle(heading[0], heading[1]) for heading in heading_classes_and_residuals])
+        print(heading_classes_and_residuals)
+        print(heading_angle)
+
         box_size = self.class2size(int(size_class), size_residual)
         obb = np.zeros((7,))
         obb[0:3] = center
