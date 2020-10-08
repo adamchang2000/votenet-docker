@@ -71,10 +71,10 @@ class OBJDatasetConfig(object):
         print(heading_angle)
 
         box_size = self.class2size(int(size_class), size_residual)
-        obb = np.zeros((7,))
+        obb = np.zeros((9,))
         obb[0:3] = center
         obb[3:6] = box_size
-        obb[6] = heading_angle
+        obb[6:9] = heading_angle
         return obb
 
 
