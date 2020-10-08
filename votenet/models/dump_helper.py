@@ -56,8 +56,8 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
     pred_heading_class2 = pred_heading_class2.detach().cpu().numpy() # B,num_proposal
     pred_heading_residual2 = pred_heading_residual2.squeeze(2).detach().cpu().numpy() # B,num_proposal
 
-    pred_heading_class3 = torch.argmax(end_points['heading_scores'], -1) # B,num_proposal
-    pred_heading_residual3 = torch.gather(end_points['heading_residuals'], 2, pred_heading_class3.unsqueeze(-1)) # B,num_proposal,1
+    pred_heading_class3 = torch.argmax(end_points['heading_scores3'], -1) # B,num_proposal
+    pred_heading_residual3 = torch.gather(end_points['heading_residuals3'], 2, pred_heading_class3.unsqueeze(-1)) # B,num_proposal,1
     pred_heading_class3 = pred_heading_class3.detach().cpu().numpy() # B,num_proposal
     pred_heading_residual3 = pred_heading_residual3.squeeze(2).detach().cpu().numpy() # B,num_proposal
 
