@@ -107,12 +107,12 @@ class OBJDetectionVotesDataset(Dataset):
 
         if self.augment:
             #randomly scale by +/-15%
-            scale_ratio = np.random.random()*0.3+0.85
-            scale_ratio = np.expand_dims(np.tile(scale_ratio,3),0)
-            point_cloud[:,0:3] *= scale_ratio
-            box3d_centers *= scale_ratio
-            box3d_sizes *= scale_ratio
-            votes *= scale_ratio
+            #scale_ratio = np.random.random()*0.3+0.85
+            #scale_ratio = np.expand_dims(np.tile(scale_ratio,3),0)
+            #point_cloud[:,0:3] *= scale_ratio
+            #box3d_centers *= scale_ratio
+            #box3d_sizes *= scale_ratio
+            #votes *= scale_ratio
 
             #random dropout, drop self.dropout_rate
             n = int(self.num_points * (1 - self.dropout_rate))
