@@ -205,6 +205,7 @@ def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample
 def get_perspective_data_from_mesh_axis_angles(mesh, xyz, axis_angles, points=20000, sample_strategy='uniform random'):
 
 	bb = get_bb(mesh)
+
 	place_mesh_axis_angles(mesh, xyz, axis_angles)
 
 	bb.translate(xyz)
@@ -281,7 +282,7 @@ def main():
 
 	bb = o3d.geometry.OrientedBoundingBox.create_from_axis_aligned_bounding_box(bb)
 
-	bb.rotate(eulerAnglesToRotationMatrix(euler_angles), bb.get_center())
+	bb.rotate(eulerAnglesToRotationMatrix(euler_angles))
 
 	o3d.visualization.draw_geometries([pcld, bb])
 

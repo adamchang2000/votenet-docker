@@ -217,7 +217,7 @@ def viz_votes(pc, point_votes, point_votes_mask):
     pc_util.write_ply(pc_obj_voted2, 'pc_obj_voted2.ply')
     pc_util.write_ply(pc_obj_voted3, 'pc_obj_voted3.ply')
 
-def viz_obb(pc, label, mask, angle_classes, angle_residuals,
+def viz_obb(pc, label, mask, angle_classes_and_residuals,
     size_classes, size_residuals):
     """ Visualize oriented bounding box ground truth
     pc: (N,3)
@@ -235,8 +235,7 @@ def viz_obb(pc, label, mask, angle_classes, angle_residuals,
         #obb = np.zeros(7)
         obb = np.zeros(9)
         obb[0:3] = label[i,0:3]
-        print(angle_classes[i])
-        heading_angles = [DC.class2angle(angle_classes[i][k], angle_residuals[i][k]) for k in range(3)]
+        heading_angles = [DC.class2angle(angle_classes_and_residuals[k][0][i], angle_classes_and_residuals[k][1][i]) for k in range(3)]
         box_size = DC.class2size(size_classes[i], size_residuals[i])
         obb[3:6] = box_size
         obb[6:9] = heading_angles
@@ -271,5 +270,6 @@ if __name__=='__main__':
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
     viz_obb(sample['point_clouds'], sample['center_label'], sample['box_label_mask'],
-        sample['heading_class_label'], sample['heading_residual_label'], 
+        [[sample['heading_class_label'], sample['heading_residual_label']], [sample['heading_class_label2'], sample['heading_residual_label2']], 
+        [sample['heading_class_label3'], sample['heading_residual_label3']]], 
         sample['size_class_label'], sample['size_residual_label'])
