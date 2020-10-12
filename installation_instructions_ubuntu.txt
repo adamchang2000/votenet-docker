@@ -1,7 +1,5 @@
 git clone https://github.com/adamchang2000/votenet-docker
-sudo apt-get install libffi-dev
-sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
-sudo apt-get install zlib1g-dev
+sudo apt-get install libffi-dev libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev zlib1g-dev
 sudo wget https://www.python.org/ftp/python/3.7.8/Python-3.7.8.tgz
 sudo tar xzf Python-3.7.8.tgz
 sudo ./configure --enable-optimizations
@@ -12,8 +10,7 @@ pip3.7 install -r requirements.txt
 cd pointnet2
 sudo python3.7 setup.py install
 
-#install open3d xd
-pip3 install open3d==0.9
+#install open3d (need this stuff)
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update
 sudo apt-get upgrade libstdc++6
