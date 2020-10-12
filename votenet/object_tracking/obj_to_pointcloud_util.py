@@ -251,8 +251,8 @@ def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strateg
 	# axis_angles *= (-np.pi + (np.random.uniform(0, 1) * 2 * np.pi))
 
 	euler_angles = np.zeros(3)
-	euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
-	euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
+	#euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
+	#euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
 	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
 	xyz = [0, 0, 0]
@@ -279,6 +279,9 @@ def main():
 	#o3d.visualization.draw_geometries([pcld, bb])
 
 	pcld, bb, votes, euler_angles = get_perspective_data_from_mesh_seed(3, mesh, args.points, args.sample_strategy)
+
+	print(bb.get_max_bound())
+	print(bb.get_min_bound())
 
 	bb = o3d.geometry.OrientedBoundingBox.create_from_axis_aligned_bounding_box(bb)
 
