@@ -13,8 +13,8 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 from nn_distance import nn_distance, huber_loss
 
-FAR_THRESHOLD = 0.6
-NEAR_THRESHOLD = 0.3
+FAR_THRESHOLD = 0.2
+NEAR_THRESHOLD = 0.1
 GT_VOTE_FACTOR = 3 # number of GT votes per point
 OBJECTNESS_CLS_WEIGHTS = [0.2,0.8] # put larger weights on positive objectness
 
@@ -127,7 +127,10 @@ def compute_rotation_loss(end_points, object_assignment, objectness_label, num_h
         heading_class_label = torch.gather(end_points[heading_class_label_key], 1, object_assignment) # select (B,K) from (B,K2)
         criterion_heading_class = nn.CrossEntropyLoss(reduction='none')
         heading_class_loss_temp = criterion_heading_class(end_points[heading_scores_key].transpose(2,1), heading_class_label) # (B,K)
-        heading_class_loss += torch.sum(heading_class_loss_temp * objectness_label)/(torch.sum(objectness_label)+1e-6)
+        if heading_class_loss == 0:
+            heading_class_loss = torch.sum(heading_class_loss_temp * objectness_label)/(torch.sum(objectness_label)+1e-6)
+        else:
+            heading_class_loss += torch.sum(heading_class_loss_temp * objectness_label)/(torch.sum(objectness_label)+1e-6)
 
         heading_residual_label = torch.gather(end_points[heading_residual_label_key], 1, object_assignment) # select (B,K) from (B,K2)
         heading_residual_normalized_label = heading_residual_label / (np.pi/num_heading_bin)
@@ -136,7 +139,10 @@ def compute_rotation_loss(end_points, object_assignment, objectness_label, num_h
         heading_label_one_hot = torch.cuda.FloatTensor(batch_size, heading_class_label.shape[1], num_heading_bin).zero_()
         heading_label_one_hot.scatter_(2, heading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
         heading_residual_normalized_loss_temp = huber_loss(torch.sum(end_points[heading_residuals_key]*heading_label_one_hot, -1) - heading_residual_normalized_label, delta=1.0) # (B,K)
-        heading_residual_normalized_loss += torch.sum(heading_residual_normalized_loss_temp*objectness_label)/(torch.sum(objectness_label)+1e-6)
+        if heading_residual_normalized_loss == 0:
+            heading_residual_normalized_loss = torch.sum(heading_residual_normalized_loss_temp*objectness_label)/(torch.sum(objectness_label)+1e-6)
+        else:
+            heading_residual_normalized_loss += torch.sum(heading_residual_normalized_loss_temp*objectness_label)/(torch.sum(objectness_label)+1e-6)
 
 
     return heading_class_loss, heading_residual_normalized_loss
