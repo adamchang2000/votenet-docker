@@ -272,7 +272,7 @@ def save_grad_flow():
 
     np.savez('grad_flow.npz', ave_grads=ave_grads_np, layers=layers_np)
 
-def plot_grad_flow(named_parameters):
+def plot_grad_flow(named_parameters, i):
     '''Plots the gradients flowing through different layers in the net during training.
     Can be used for checking for possible gradient vanishing / exploding problems.
     
@@ -299,7 +299,7 @@ def plot_grad_flow(named_parameters):
     plt.legend([Line2D([0], [0], color="c", lw=4),
                 Line2D([0], [0], color="b", lw=4),
                 Line2D([0], [0], color="k", lw=4)], ['max-gradient', 'mean-gradient', 'zero-gradient'])
-    plt.savefig('grad_flow.png')
+    plt.savefig('grad_flow' + str(i) + '.png')
 
 def train_one_epoch():
     stat_dict = {} # collect statistics
@@ -394,6 +394,7 @@ def train(start_epoch):
     global EPOCH_CNT 
     min_loss = 1e10
     loss = 0
+    i = 0
     for epoch in range(start_epoch, MAX_EPOCH):
         EPOCH_CNT = epoch
         log_string('**** EPOCH %03d ****' % (epoch))
@@ -416,7 +417,8 @@ def train(start_epoch):
         except:
             save_dict['model_state_dict'] = net.state_dict()
         torch.save(save_dict, os.path.join(LOG_DIR, 'checkpoint.tar'))
-        plot_grad_flow(net.named_parameters())
+        plot_grad_flow(net.named_parameters(), i)
+        i += 1
 
 if __name__=='__main__':
     train(start_epoch)
