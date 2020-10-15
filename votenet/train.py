@@ -244,6 +244,26 @@ CONFIG_DICT = {'remove_empty_box':False, 'use_3d_nms':True,
 
 # ------------------------------------------------------------------------- GLOBAL CONFIG END
 
+ave_grads = []
+layers = []
+
+def store_grad_flow(named_parameters):
+    global ave_grads
+    global layers
+    for n, p in named_parameters:
+        if(p.requires_grad) and ("bias" not in n):
+            layers.append(n)
+            ave_grads.append(p.grad.abs().mean())
+
+def save_grad_flow():
+    global ave_grads
+    global layers
+
+    ave_grads = np.asarray(ave_grads)
+    layers = np.asarray(layers)
+
+    np.savez('grad_flow.npz', ave_grads=ave_grads, layers=layers)
+
 def train_one_epoch():
     stat_dict = {} # collect statistics
     adjust_learning_rate(optimizer, EPOCH_CNT)
@@ -265,6 +285,7 @@ def train_one_epoch():
         loss, end_points = criterion(end_points, DATASET_CONFIG)
         loss.backward()
         optimizer.step()
+        store_grad_flow(net.named_parameters())
 
         # Accumulate statistics and print out
         for key in end_points:
@@ -358,6 +379,8 @@ def train(start_epoch):
         except:
             save_dict['model_state_dict'] = net.state_dict()
         torch.save(save_dict, os.path.join(LOG_DIR, 'checkpoint.tar'))
+
+    save_grad_flow()
 
 if __name__=='__main__':
     train(start_epoch)
