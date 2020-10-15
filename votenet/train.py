@@ -322,7 +322,7 @@ def train_one_epoch():
         loss, end_points = criterion(end_points, DATASET_CONFIG)
         loss.backward()
         optimizer.step()
-        plot_grad_flow(net.named_parameters())
+            
 
         # Accumulate statistics and print out
         for key in end_points:
@@ -416,7 +416,7 @@ def train(start_epoch):
         except:
             save_dict['model_state_dict'] = net.state_dict()
         torch.save(save_dict, os.path.join(LOG_DIR, 'checkpoint.tar'))
-        save_grad_flow()
+        plot_grad_flow(net.named_parameters())
 
 if __name__=='__main__':
     train(start_epoch)
