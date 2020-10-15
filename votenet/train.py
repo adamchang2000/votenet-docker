@@ -32,6 +32,7 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
