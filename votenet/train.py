@@ -259,10 +259,10 @@ def save_grad_flow():
     global ave_grads
     global layers
 
-    ave_grads = np.asarray(ave_grads)
-    layers = np.asarray(layers)
+    ave_grads_np = np.asarray(ave_grads)
+    layers_np = np.asarray(layers)
 
-    np.savez('grad_flow.npz', ave_grads=ave_grads, layers=layers)
+    np.savez('grad_flow.npz', ave_grads=ave_grads_np, layers=layers_np)
 
 def train_one_epoch():
     stat_dict = {} # collect statistics
@@ -379,8 +379,7 @@ def train(start_epoch):
         except:
             save_dict['model_state_dict'] = net.state_dict()
         torch.save(save_dict, os.path.join(LOG_DIR, 'checkpoint.tar'))
-
-    save_grad_flow()
+        save_grad_flow()
 
 if __name__=='__main__':
     train(start_epoch)
