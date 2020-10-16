@@ -80,6 +80,10 @@ BATCH_SIZE = FLAGS.batch_size
 NUM_POINT = FLAGS.num_point
 MAX_EPOCH = FLAGS.max_epoch
 BASE_LEARNING_RATE = FLAGS.learning_rate
+
+#????
+BASE_LEARNING_RATE = 0.01
+
 BN_DECAY_STEP = FLAGS.bn_decay_step
 BN_DECAY_RATE = FLAGS.bn_decay_rate
 LR_DECAY_STEPS = [int(x) for x in FLAGS.lr_decay_steps.split(',')]
@@ -417,7 +421,9 @@ def train(start_epoch):
         except:
             save_dict['model_state_dict'] = net.state_dict()
         torch.save(save_dict, os.path.join(LOG_DIR, 'checkpoint.tar'))
-        plot_grad_flow(net.named_parameters(), i)
+        if i % 10 == 9:
+            plot_grad_flow(net.named_parameters(), i)
+
         i += 1
 
 if __name__=='__main__':
