@@ -82,7 +82,7 @@ MAX_EPOCH = FLAGS.max_epoch
 BASE_LEARNING_RATE = FLAGS.learning_rate
 
 #????
-BASE_LEARNING_RATE = 0.01
+BASE_LEARNING_RATE = 0.005
 
 BN_DECAY_STEP = FLAGS.bn_decay_step
 BN_DECAY_RATE = FLAGS.bn_decay_rate
