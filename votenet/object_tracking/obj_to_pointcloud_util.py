@@ -253,7 +253,7 @@ def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strateg
 	euler_angles = np.zeros(3)
 	euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 	#euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
-	#euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
+	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
 	xyz = [0, 0, 0]
 	xyz[0] = np.random.uniform(-3, 3)
