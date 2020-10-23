@@ -119,6 +119,9 @@ def parse_predictions(end_points, config_dict):
                 pc_in_box,inds = extract_pc_in_box3d(pc, box3d)
                 if len(pc_in_box) < 5:
                     nonempty_box_mask[i,j] = 0
+
+            if np.sum(nonempty_box_mask[i]) == 0:
+                nonempty_box_mask[i] = np.ones(K)
         # -------------------------------------
 
     obj_logits = end_points['objectness_scores'].detach().cpu().numpy()
@@ -135,7 +138,6 @@ def parse_predictions(end_points, config_dict):
                 boxes_2d_with_prob[j,3] = np.max(pred_corners_3d_upright_camera[i,j,:,2])
                 boxes_2d_with_prob[j,4] = obj_prob[i,j]
             nonempty_box_inds = np.where(nonempty_box_mask[i,:]==1)[0]
-            print(len(nonempty_box_inds))
             pick = nms_2d_faster(boxes_2d_with_prob[nonempty_box_mask[i,:]==1,:],
                 config_dict['nms_iou'], config_dict['use_old_type_nms'])
             assert(len(pick)>0)
@@ -156,7 +158,6 @@ def parse_predictions(end_points, config_dict):
                 boxes_3d_with_prob[j,5] = np.max(pred_corners_3d_upright_camera[i,j,:,2])
                 boxes_3d_with_prob[j,6] = obj_prob[i,j]
             nonempty_box_inds = np.where(nonempty_box_mask[i,:]==1)[0]
-            print(len(nonempty_box_inds))
             pick = nms_3d_faster(boxes_3d_with_prob[nonempty_box_mask[i,:]==1,:],
                 config_dict['nms_iou'], config_dict['use_old_type_nms'])
             assert(len(pick)>0)
