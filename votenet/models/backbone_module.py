@@ -34,7 +34,7 @@ class Pointnet2Backbone(nn.Module):
 
         self.sa1 = PointnetSAModuleVotes(
                 npoint=2048,
-                radius=0.015,
+                radius=0.03,
                 nsample=64,
                 mlp=[input_feature_dim, 64, 64, 128], #input feature dim = 3, color, adds xyz data inside
                 use_xyz=True,
@@ -43,7 +43,7 @@ class Pointnet2Backbone(nn.Module):
 
         self.sa2 = PointnetSAModuleVotes(
                 npoint=1024,
-                radius=0.03,
+                radius=0.06,
                 nsample=32,
                 mlp=[128, 128, 128, 256],
                 use_xyz=True,
@@ -52,7 +52,7 @@ class Pointnet2Backbone(nn.Module):
 
         self.sa3 = PointnetSAModuleVotes(
                 npoint=512,
-                radius=0.06,
+                radius=0.12,
                 nsample=16,
                 mlp=[256, 128, 128, 256],
                 use_xyz=True,
@@ -61,7 +61,7 @@ class Pointnet2Backbone(nn.Module):
 
         self.sa4 = PointnetSAModuleVotes(
                 npoint=256,
-                radius=0.12,
+                radius=0.24,
                 nsample=16,
                 mlp=[256, 128, 128, 256],
                 use_xyz=True,
