@@ -135,6 +135,7 @@ def parse_predictions(end_points, config_dict):
                 boxes_2d_with_prob[j,3] = np.max(pred_corners_3d_upright_camera[i,j,:,2])
                 boxes_2d_with_prob[j,4] = obj_prob[i,j]
             nonempty_box_inds = np.where(nonempty_box_mask[i,:]==1)[0]
+            print(len(nonempty_box_inds))
             pick = nms_2d_faster(boxes_2d_with_prob[nonempty_box_mask[i,:]==1,:],
                 config_dict['nms_iou'], config_dict['use_old_type_nms'])
             assert(len(pick)>0)
@@ -155,6 +156,7 @@ def parse_predictions(end_points, config_dict):
                 boxes_3d_with_prob[j,5] = np.max(pred_corners_3d_upright_camera[i,j,:,2])
                 boxes_3d_with_prob[j,6] = obj_prob[i,j]
             nonempty_box_inds = np.where(nonempty_box_mask[i,:]==1)[0]
+            print(len(nonempty_box_inds))
             pick = nms_3d_faster(boxes_3d_with_prob[nonempty_box_mask[i,:]==1,:],
                 config_dict['nms_iou'], config_dict['use_old_type_nms'])
             assert(len(pick)>0)
