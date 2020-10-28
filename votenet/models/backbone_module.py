@@ -68,8 +68,8 @@ class Pointnet2Backbone(nn.Module):
                 normalize_xyz=True
             )
 
-        self.fp1 = PointnetFPModule(mlp=[256+256,256,256])
-        self.fp2 = PointnetFPModule(mlp=[256+256,256,256])
+        self.fp1 = PointnetFPModule(mlp=[512+512,512,512])
+        self.fp2 = PointnetFPModule(mlp=[512+512,512,512])
 
     def _break_up_pc(self, pc):
         xyz = pc[..., 0:3].contiguous()
