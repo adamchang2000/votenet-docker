@@ -17,9 +17,9 @@ class OBJDatasetConfig(object):
         self.num_heading_bin = 12
         self.num_size_cluster = 1
 
-        self.type2class={'hoop': 0}
+        self.type2class={'medical': 0}
         self.class2type = {self.type2class[t]:t for t in self.type2class}
-        self.type_mean_size = {'hoop': np.array([0.19998296, 0.19997762, 0.012])}
+        self.type_mean_size = {'medical': np.array([0.08954177, 0.125, 0.14596413])}
 
         self.mean_size_arr = np.zeros((self.num_size_cluster, 3))
         for i in range(self.num_size_cluster):
