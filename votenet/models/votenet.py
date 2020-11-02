@@ -60,7 +60,7 @@ class VoteNet(nn.Module):
         self.backbone_net = Pointnet2Backbone(input_feature_dim=self.input_feature_dim)
 
         # Hough voting
-        self.vgen = VotingModule(self.vote_factor, 512)
+        self.vgen = VotingModule(self.vote_factor, 1024)
 
         # Vote aggregation and detection
         self.pnet = ProposalModule(num_class, num_heading_bin, num_size_cluster,
