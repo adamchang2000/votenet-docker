@@ -42,7 +42,7 @@ def convert_obj_to_mesh(filename, scale = 1):
 
 	#print('called convert obj to mesh')
 
-	scene = pywavefront.Wavefront(filename)
+	scene = pywavefront.Wavefront(filename, collect_faces=True)
 	scene.parse()
 
 	vertex_normals = []
@@ -51,12 +51,20 @@ def convert_obj_to_mesh(filename, scale = 1):
 
 	for name, material in scene.materials.items():
 		i = 0
-		vertex = [0, 0]
+
 		while i < len(material.vertices):
-			vertex_normals.append([material.vertices[i], material.vertices[i+1], material.vertices[i+2]])
-			vertex_pos.append([material.vertices[i+3], material.vertices[i+4], material.vertices[i+5]])
+			if material.vertex_format == 'N3F_V3F':
+				vertex_normals.append([material.vertices[i], material.vertices[i+1], material.vertices[i+2]])
+				vertex_pos.append([material.vertices[i+3], material.vertices[i+4], material.vertices[i+5]])
+				i += 6
+			elif material.vertex_format == 'V3F':
+				vertex_pos.append([material.vertices[i], material.vertices[i+1], material.vertices[i+2]])
+				i += 3
+			else:
+				print('uhoh what is this format')
+
 			vertex_colors.append([material.diffuse[0], material.diffuse[1], material.diffuse[2]])
-			i += 6
+			
 
 	#print('retrieved data in obj to mesh')
 
@@ -69,7 +77,11 @@ def convert_obj_to_mesh(filename, scale = 1):
 
 	mesh.triangles = o3d.utility.Vector3iVector(triangles)
 	mesh.vertices = o3d.utility.Vector3dVector(vertex_pos)
-	mesh.vertex_normals = o3d.utility.Vector3dVector(vertex_normals)
+
+	if len(vertex_normals) > 0:
+		mesh.vertex_normals = o3d.utility.Vector3dVector(vertex_normals)
+	else:
+		mesh.compute_vertex_normals()
 	mesh.vertex_colors = o3d.utility.Vector3dVector(vertex_colors)
 
 	#print('filled mesh in obj to mesh')
@@ -265,7 +277,7 @@ def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strateg
 
 def main():
 	parser = argparse.ArgumentParser(description='Extract a mesh and data from an obj')
-	parser.add_argument('--filename', default='ps3_controller/model.obj', help='file path to obj')
+	parser.add_argument('--filename', default='embroidery_hoop/inner_hoop.obj', help='file path to obj')
 	parser.add_argument('-n', dest='points', default=10000, type=int, help='number of points to sample, default = 20k')
 	parser.add_argument('-s', dest='sample_strategy', default='uniform random', help='point sampling strategy, available: uniform random, uniform grid')
 
@@ -273,6 +285,7 @@ def main():
 	print('starting processing %s' % args.filename)
 
 	mesh = convert_obj_to_mesh(args.filename, 0.001)
+	o3d.visualization.draw_geometries([mesh])
 	
 	#pcld, bb, votes, euler_angles = get_perspective_data_from_mesh(mesh, np.asarray([1, -3, 2]), np.asarray([0, 0, np.pi / 6]), args.points, args.sample_strategy)
 

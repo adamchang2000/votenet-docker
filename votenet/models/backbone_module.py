@@ -36,7 +36,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=2048,
                 radius=0.03,
                 nsample=64,
-                mlp=[input_feature_dim, 256, 256, 512], #input feature dim = 3, color, adds xyz data inside
+                mlp=[input_feature_dim, 128, 128, 256], #input feature dim = 3, color, adds xyz data inside
                 use_xyz=True,
                 normalize_xyz=True
             )
@@ -45,7 +45,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=1024,
                 radius=0.06,
                 nsample=32,
-                mlp=[512, 512, 512, 1024],
+                mlp=[256, 256, 256, 512],
                 use_xyz=True,
                 normalize_xyz=True
             )
@@ -54,7 +54,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=512,
                 radius=0.12,
                 nsample=16,
-                mlp=[1024, 512, 512, 1024],
+                mlp=[512, 256, 256, 512],
                 use_xyz=True,
                 normalize_xyz=True
             )
@@ -63,13 +63,13 @@ class Pointnet2Backbone(nn.Module):
                 npoint=256,
                 radius=0.24,
                 nsample=16,
-                mlp=[1024, 512, 512, 1024],
+                mlp=[512, 256, 256, 512],
                 use_xyz=True,
                 normalize_xyz=True
             )
 
-        self.fp1 = PointnetFPModule(mlp=[1024+1024,1024,1024])
-        self.fp2 = PointnetFPModule(mlp=[1024+1024,1024,1024])
+        self.fp1 = PointnetFPModule(mlp=[512+512,512,512])
+        self.fp2 = PointnetFPModule(mlp=[512+512,512,512])
 
     def _break_up_pc(self, pc):
         xyz = pc[..., 0:3].contiguous()

@@ -58,7 +58,7 @@ def decode_scores(net, end_points, num_class, num_heading_bin, num_size_cluster,
 
 
 class ProposalModule(nn.Module):
-    def __init__(self, num_class, num_heading_bin, num_size_cluster, mean_size_arr, num_proposal, sampling, seed_feat_dim=1024):
+    def __init__(self, num_class, num_heading_bin, num_size_cluster, mean_size_arr, num_proposal, sampling, seed_feat_dim=512):
         super().__init__() 
 
         self.num_class = num_class

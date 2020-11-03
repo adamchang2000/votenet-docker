@@ -2,7 +2,7 @@ cmake
 numpy==1.18
 scikit-build
 matplotlib
-opencv-python
+opencv-python==4.2.0.34
 plyfile
 trimesh==2.35.39
 networkx==2.2
