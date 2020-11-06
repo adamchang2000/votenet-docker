@@ -1,2 +1,3 @@
 python3.7 train.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=8000 --use_color --no_height --batch_size=12
 python3.7 eval.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=8000 --use_color --no_height --batch_size=12 --checkpoint_path=log/checkpoint.tar --dump_dir=dump
+python track.py --model_path "C:\Users\adam2\Desktop\votenet-docker\votenet\object_tracking\medical\choukemoduan_v0.obj" --network_path "C:\Users\adam2\Desktop\votenet-docker\votenet\results_6dof\medical\11-3 medical oops did again\checkpoint.tar"

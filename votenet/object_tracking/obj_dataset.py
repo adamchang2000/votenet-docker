@@ -40,7 +40,7 @@ MEAN_COLOR_RGB = np.array([0.5,0.5,0.5]) # sunrgbd color is in 0~1
 class OBJDetectionVotesDataset(Dataset):
     def __init__(self, model_path, split_set='train', num_points=10000, use_color=False, augment=True, dropout_rate=0.2):
 
-        assert(num_points<=50000)
+        #assert(num_points<=100000)
 
         assert(os.path.isdir(model_path))
         assert(os.path.exists(os.path.join(model_path, 'train_samples.npz')))
@@ -90,12 +90,13 @@ class OBJDetectionVotesDataset(Dataset):
         #print('xd ', axis_angles)
 
         votes = data['votes']
+        vote_mask = data['vote_mask']
         
         #points = np.asarray(pcld.points)
         #colors = np.asarray(pcld.colors)
 
         #assert(len(point_cloud.points) == len(point_cloud.colors))
-        assert(len(point_cloud) == self.num_points)
+        #assert(len(point_cloud) == self.num_points)
 
 
         if not self.use_color:
@@ -104,8 +105,15 @@ class OBJDetectionVotesDataset(Dataset):
             point_cloud = point_cloud[:,0:6]
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_COLOR_RGB)
 
+        #random sample points
+        n = self.num_points
+        if point_cloud.shape[0] > n:
+            index = np.random.choice(point_cloud.shape[0], n, replace=False)
+            point_cloud = point_cloud[index]
+            votes = votes[index]
+            vote_mask = vote_mask[index]
 
-        if self.augment:
+        #if self.augment:
             #randomly scale by +/-15%
             #scale_ratio = np.random.random()*0.3+0.85
             #scale_ratio = np.expand_dims(np.tile(scale_ratio,3),0)
@@ -115,10 +123,7 @@ class OBJDetectionVotesDataset(Dataset):
             #votes *= scale_ratio
 
             #random dropout, drop self.dropout_rate
-            n = int(self.num_points * (1 - self.dropout_rate))
-            index = np.random.choice(point_cloud.shape[0], n, replace=False)
-            point_cloud = point_cloud[index]
-            votes = votes[index]  
+            
 
         # ------------------------------- LABELS ------------------------------
         """
@@ -181,7 +186,6 @@ class OBJDetectionVotesDataset(Dataset):
         label_mask = np.asarray([1])
 
         vote_labels = np.asarray([[a[0], a[1], a[2], a[0], a[1], a[2], a[0], a[1], a[2]] for a in votes])
-        vote_labels_mask = np.ones(vote_labels.shape[0])
 
         ret_dict = {}
         ret_dict['point_clouds'] = point_cloud.astype(np.float32)
@@ -198,7 +202,7 @@ class OBJDetectionVotesDataset(Dataset):
         ret_dict['sem_cls_label'] = semantic_class_index.astype(np.int64)
         ret_dict['box_label_mask'] = label_mask.astype(np.float32)
         ret_dict['vote_label'] = vote_labels.astype(np.float32)
-        ret_dict['vote_label_mask'] = vote_labels_mask.astype(np.int64)
+        ret_dict['vote_label_mask'] = vote_mask.astype(np.int64)
         ret_dict['scan_idx'] = np.array(sample_num).astype(np.int64)
         ret_dict['max_gt_bboxes'] = np.asarray([])
         return ret_dict
@@ -264,8 +268,8 @@ def get_sem_cls_statistics():
 
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
-    d = OBJDetectionVotesDataset(sys.argv[1], num_points=8000, use_color=True, augment=True)
-    sample = d[5]
+    d = OBJDetectionVotesDataset(sys.argv[1], num_points=50000, use_color=True, augment=True)
+    sample = d[3]
     print(sample['vote_label'].shape, sample['vote_label_mask'].shape)
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])

@@ -255,7 +255,7 @@ def get_perspective_data_from_mesh_axis_angles(mesh, xyz, axis_angles, points=20
 	return pointcloud, bb, np.asarray(votes), axis_angles
 
 #return pointcloud, bb, votes, axis angles
-def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strategy='uniform random'):
+def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strategy='uniform random', center=np.array([0, 0, 0])):
 	np.random.seed(seed)
 	#axis_angles = np.array([1, 0, 0])
 	# axis_angles = np.array([0, 0, 1])
@@ -267,10 +267,10 @@ def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strateg
 	#euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
 	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
-	xyz = [0, 0, 0]
-	xyz[0] = np.random.uniform(-3, 3)
-	xyz[1] = np.random.uniform(0.3, 4)
-	xyz[2] = np.random.uniform(-3, 3)
+	xyz = center
+	xyz[0] += np.random.uniform(-0.5, 0.5)
+	xyz[1] += np.random.uniform(-0.5, 0.5)
+	xyz[2] += np.random.uniform(-0.5, 0.5)
 
 	#return get_perspective_data_from_mesh_axis_angles(mesh, np.asarray(xyz), np.asarray(axis_angles), points, sample_strategy)
 	return get_perspective_data_from_mesh(mesh, np.asarray(xyz), np.asarray(euler_angles), points, sample_strategy)
