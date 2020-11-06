@@ -6,7 +6,7 @@ if (len(sys.argv) != 2):
 	print('usage: python reduce_pcld.py <pcld.ply>')
 	exit(1)
 
-max_points = 100000
+max_points = 50000
 pcld_filename = sys.argv[1]
 
 assert(os.path.exists(pcld_filename))
