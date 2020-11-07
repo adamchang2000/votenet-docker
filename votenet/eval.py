@@ -140,7 +140,7 @@ if CHECKPOINT_PATH is not None and os.path.isfile(CHECKPOINT_PATH):
     log_string("Loaded checkpoint %s (epoch: %d)"%(CHECKPOINT_PATH, epoch))
 
 # Used for AP calculation
-CONFIG_DICT = {'remove_empty_box': (not FLAGS.faster_eval), 'use_3d_nms': FLAGS.use_3d_nms, 'nms_iou': FLAGS.nms_iou,
+CONFIG_DICT = {'remove_empty_box': (not FLAGS.faster_eval), 'use_3d_nms': True, 'nms_iou': FLAGS.nms_iou,
     'use_old_type_nms': FLAGS.use_old_type_nms, 'cls_nms': FLAGS.use_cls_nms, 'per_class_proposal': FLAGS.per_class_proposal,
     'conf_thresh': FLAGS.conf_thresh, 'dataset_config':DATASET_CONFIG}
 # ------------------------------------------------------------------------- GLOBAL CONFIG END

@@ -38,7 +38,7 @@ MAX_NUM_OBJ = 1 # maximum number of objects allowed per scene
 MEAN_COLOR_RGB = np.array([0.5,0.5,0.5]) # sunrgbd color is in 0~1
 
 class OBJDetectionVotesDataset(Dataset):
-    def __init__(self, model_path, split_set='train', num_points=10000, use_color=False, augment=True, dropout_rate=0.2):
+    def __init__(self, model_path, split_set='train', num_points=25000, use_color=False, augment=True, dropout_rate=0.2):
 
         #assert(num_points<=100000)
 
@@ -106,12 +106,12 @@ class OBJDetectionVotesDataset(Dataset):
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_COLOR_RGB)
 
         #random sample points
-        # n = self.num_points
-        # if point_cloud.shape[0] > n:
-        #     index = np.random.choice(point_cloud.shape[0], n, replace=False)
-        #     point_cloud = point_cloud[index]
-        #     votes = votes[index]
-        #     vote_mask = vote_mask[index]
+        n = self.num_points
+        if point_cloud.shape[0] > n:
+            index = np.random.choice(point_cloud.shape[0], n, replace=False)
+            point_cloud = point_cloud[index]
+            votes = votes[index]
+            vote_mask = vote_mask[index]
 
         #if self.augment:
             #randomly scale by +/-15%
