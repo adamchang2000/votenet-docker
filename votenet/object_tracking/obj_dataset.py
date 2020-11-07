@@ -106,12 +106,12 @@ class OBJDetectionVotesDataset(Dataset):
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_COLOR_RGB)
 
         #random sample points
-        n = self.num_points
-        if point_cloud.shape[0] > n:
-            index = np.random.choice(point_cloud.shape[0], n, replace=False)
-            point_cloud = point_cloud[index]
-            votes = votes[index]
-            vote_mask = vote_mask[index]
+        # n = self.num_points
+        # if point_cloud.shape[0] > n:
+        #     index = np.random.choice(point_cloud.shape[0], n, replace=False)
+        #     point_cloud = point_cloud[index]
+        #     votes = votes[index]
+        #     vote_mask = vote_mask[index]
 
         #if self.augment:
             #randomly scale by +/-15%
