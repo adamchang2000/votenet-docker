@@ -99,6 +99,8 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
                 pc_util.write_oriented_bbox_6dof(obbs[np.logical_and(objectness_prob>DUMP_CONF_THRESH, pred_mask[i,:]==1),:], os.path.join(dump_dir, '%06d_pred_confident_nms_bbox.ply'%(idx_beg+i)))
                 pc_util.write_oriented_bbox_6dof(obbs[pred_mask[i,:]==1,:], os.path.join(dump_dir, '%06d_pred_nms_bbox.ply'%(idx_beg+i)))
                 pc_util.write_oriented_bbox_6dof(obbs, os.path.join(dump_dir, '%06d_pred_bbox.ply'%(idx_beg+i)))
+            else:
+                print('warning, no obbs')
 
     # Return if it is at inference time. No dumping of groundtruths
     if inference_switch:
