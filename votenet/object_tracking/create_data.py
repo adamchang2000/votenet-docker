@@ -42,8 +42,8 @@ def main():
 		combined_points = np.vstack((points, np.array(scene.points)))
 		combined_colors = np.vstack((colors, np.array(scene.colors)))
 		
-		scene.points = o3d.utility.Vector3dVector(combined_points)
-		scene.colors = o3d.utility.Vector3dVector(combined_colors)
+		#scene.points = o3d.utility.Vector3dVector(combined_points)
+		#scene.colors = o3d.utility.Vector3dVector(combined_colors)
 
 		total_votes = np.zeros((combined_points.shape[0], 3))
 		total_votes[:votes.shape[0]] = votes
