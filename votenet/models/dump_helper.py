@@ -21,7 +21,7 @@ def softmax(x):
     probs /= np.sum(probs, axis=len(shape)-1, keepdims=True)
     return probs
 
-def dump_results(end_points, dump_dir, config, inference_switch=False):
+def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg = 0):
     ''' Dump results.
 
     Args:
@@ -70,7 +70,6 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
 
     # OTHERS
     pred_mask = end_points['pred_mask'] # B,num_proposal
-    idx_beg = 0
 
     for i in range(batch_size):
         pc = point_clouds[i,:,:]
