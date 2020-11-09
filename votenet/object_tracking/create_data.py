@@ -24,12 +24,12 @@ def main():
 	model = convert_obj_to_mesh(model_path, scale)
 
 	scenes = []
-	for i in range(10):
+	for i in range(123):
 		scenes.append(o3d.io.read_point_cloud(os.path.join(scene_path, str(i) + '.ply')))
 
 	for i in range(number_of_samples):
 
-		scene_index = np.random.randint(10)
+		scene_index = np.random.randint(123)
 		scene = scenes[scene_index]
 
 		pcld, bb, votes, euler_angles = get_perspective_data_from_mesh_seed(i, model, points=num_points, center = scene.get_center())
