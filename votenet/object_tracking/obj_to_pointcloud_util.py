@@ -264,13 +264,18 @@ def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strateg
 
 	euler_angles = np.zeros(3)
 	euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
-	#euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
+	euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
 	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
-	xyz = center
-	xyz[0] += np.random.uniform(-0.5, 0.5)
-	xyz[1] += np.random.uniform(-0.5, 0.5)
-	xyz[2] += np.random.uniform(-0.5, 0.5)
+	xyz = np.copy(center)
+	if np.random.rand() < 0.5:
+		xyz[0] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
+		xyz[1] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
+		xyz[2] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
+	else:
+		xyz[0] += np.random.uniform(0.15, 0.25) * (-1 if np.random.rand() < 0.5 else 1)
+		xyz[1] += np.random.uniform(0.15, 0.25) * (-1 if np.random.rand() < 0.5 else 1)
+		xyz[2] += np.random.uniform(0.15, 0.25) * (-1 if np.random.rand() < 0.5 else 1)
 
 	#return get_perspective_data_from_mesh_axis_angles(mesh, np.asarray(xyz), np.asarray(axis_angles), points, sample_strategy)
 	return get_perspective_data_from_mesh(mesh, np.asarray(xyz), np.asarray(euler_angles), points, sample_strategy)

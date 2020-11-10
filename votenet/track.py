@@ -6,6 +6,8 @@ from datetime import datetime
 import pyrealsense2 as rs
 import open3d as o3d
 
+#sample this many points
+NUM_POINTS_NETWORK = 30000
 
 def main():
     parser = argparse.ArgumentParser(description='Track an object')
@@ -91,6 +93,10 @@ def main():
 
 
             color_image_flatten = color_image.reshape((color_image.shape[0] * color_image.shape[1], 3)) / 255.
+            color_image_flatten /= np.max(np.abs(color_image_flatten), axis=0)
+
+
+            #print(np.max(np.abs(color_image_flatten), axis=0))
             #print(color_image_flatten[150000])
 
             depth_image_flatten = depth_image.flatten()
@@ -101,20 +107,26 @@ def main():
             pcld_input = pcld_input[depth_image_flatten > 0].astype(np.float32)
             print('non-zero depth points ', pcld_input.shape)
 
-            save_pcld = o3d.geometry.PointCloud()
-            save_pcld.points = o3d.utility.Vector3dVector(pcld_input[:,:3])
 
-            rgb_colors = np.zeros((pcld_input.shape[0], 3))
-            rgb_colors[:,0] = pcld_input[:,5]
-            rgb_colors[:,1] = pcld_input[:,4]
-            rgb_colors[:,2] = pcld_input[:,3]
+            if pcld_input.shape[0] > NUM_POINTS_NETWORK:
 
-            save_pcld.colors = o3d.utility.Vector3dVector(rgb_colors)
-            o3d.io.write_point_cloud(str(idx) + '.ply', save_pcld, write_ascii=True)
+                index = np.random.choice(pcld_input.shape[0], NUM_POINTS_NETWORK, replace=False)
+                pcld_input = pcld_input[index]
 
-            #run network on image
-            # if pcld_input.shape[0] > 30000:
-            #     run_network(pcld_input)
+                #run network on image
+                run_network(pcld_input)
+
+            #save the image frame
+            # save_pcld = o3d.geometry.PointCloud()
+            # save_pcld.points = o3d.utility.Vector3dVector(pcld_input[:,:3])
+
+            # rgb_colors = np.zeros((pcld_input.shape[0], 3))
+            # rgb_colors[:,0] = pcld_input[:,5]
+            # rgb_colors[:,1] = pcld_input[:,4]
+            # rgb_colors[:,2] = pcld_input[:,3]
+
+            # save_pcld.colors = o3d.utility.Vector3dVector(rgb_colors)
+            # o3d.io.write_point_cloud(str(idx) + '.ply', save_pcld, write_ascii=True)
 
             # Render images
             cv2.namedWindow('depth', cv2.WINDOW_AUTOSIZE)

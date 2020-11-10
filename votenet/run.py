@@ -102,10 +102,12 @@ def setup(checkpoint_path):
     # ------------------------------------------------------------------------- GLOBAL CONFIG END
 
 
+i = 0
 
 #run the network on a pointcloud
 #pointcloud needs to be of format n x (XYZ RGB)
 def run_network(pointcloud):
+    global i
     stat_dict = {}
     net.eval() # set model to eval mode (for bn and dp)
         
@@ -123,14 +125,21 @@ def run_network(pointcloud):
     #this should return, [(class index, obb params, box confidence)]
     batch_pred_map_cls = parse_predictions(end_points, CONFIG_DICT) 
 
-    # max_conf = -1
-    # max_pred = 0
-    # for pred in batch_pred_map_cls[0]:
-    #     if pred[2] > max_conf:
-    #         max_conf = pred[2]
-    #         max_pred = pred
+    max_conf = -1
+    max_pred = 0
+    for pred in batch_pred_map_cls[0]:
+        if pred[2] > max_conf:
+            max_conf = pred[2]
+            max_pred = pred
 
-    MODEL.dump_results(end_points, 'test_dump', DATASET_CONFIG)
+        print('max conf ', max_conf)
+
+    try:
+        MODEL.dump_results(end_points, 'test_dump', DATASET_CONFIG, idx_beg = i)
+    except:
+        pass
+
+    i += 10
 
     return batch_pred_map_cls
 

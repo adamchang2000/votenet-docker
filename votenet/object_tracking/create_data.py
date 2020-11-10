@@ -11,7 +11,7 @@ def main():
 	training_number = 8
 	testing_number = 2
 	val_number = 0
-	num_points = 2000
+	num_points = 1000
 	scale = 0.001
 
 	assert(os.path.exists(model_path))
@@ -32,7 +32,9 @@ def main():
 		scene_index = np.random.randint(123)
 		scene = scenes[scene_index]
 
-		pcld, bb, votes, euler_angles = get_perspective_data_from_mesh_seed(i, model, points=num_points, center = scene.get_center())
+		scene_pts = np.array(scene.points)
+
+		pcld, bb, votes, euler_angles = get_perspective_data_from_mesh_seed(i, model, points=num_points, center = scene_pts[np.random.randint(scene_pts.shape[0])])
 		box3d_centers = np.asarray([bb.get_center()])
 		box3d_sizes = np.asarray([bb.get_max_bound() - bb.get_min_bound()])
 
