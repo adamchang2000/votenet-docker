@@ -91,9 +91,11 @@ def main():
             pcld = np.asanyarray(pointcloud.get_vertices())
             pcld = pcld.view(np.float32).reshape(pcld.shape + (-1,))
 
+            #minus 0.5 in accordance with training data
+            color_image_flatten = color_image.reshape((color_image.shape[0] * color_image.shape[1], 3)) / 255. - 0.5
 
-            color_image_flatten = color_image.reshape((color_image.shape[0] * color_image.shape[1], 3)) / 255.
-            color_image_flatten /= np.max(np.abs(color_image_flatten), axis=0)
+            #NORMALIZE COLORS
+            #color_image_flatten /= np.max(np.abs(color_image_flatten), axis=0)
 
 
             #print(np.max(np.abs(color_image_flatten), axis=0))
@@ -133,6 +135,7 @@ def main():
             cv2.namedWindow('color', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('depth', depth_image)
             cv2.imshow('color', color_image)
+            cv2.imwrite(str(idx+1)+'.png', color_image)
             key = cv2.waitKey(1)
 
             print('elapsed time for frame: ', datetime.now() - timestamp)

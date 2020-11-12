@@ -26,8 +26,12 @@ def main():
 	scenes = []
 	for i in range(123):
 		scenes.append(o3d.io.read_point_cloud(os.path.join(scene_path, str(i) + '.ply')))
+		#scenes.append('xd')
 
 	for i in range(number_of_samples):
+
+		if i % 100 == 0:
+			print('creating sample ', i + 1, end='\r')
 
 		scene_index = np.random.randint(123)
 		scene = scenes[scene_index]
@@ -38,22 +42,26 @@ def main():
 		box3d_centers = np.asarray([bb.get_center()])
 		box3d_sizes = np.asarray([bb.get_max_bound() - bb.get_min_bound()])
 
+		# pts = np.array(pcld.points)
+		# print(pts.shape)
+		# colors = np.array(pcld.colors)
+		# print(colors[3])
+		# print(colors[4])
+
+		# o3d.visualization.draw_geometries([pcld, bb])
+
+		# exit()
+
 		points = np.asarray(pcld.points)
 		colors = np.asarray(pcld.colors)
 
 		combined_points = np.vstack((points, np.array(scene.points)))
 		combined_colors = np.vstack((colors, np.array(scene.colors)))
-		
-		#scene.points = o3d.utility.Vector3dVector(combined_points)
-		#scene.colors = o3d.utility.Vector3dVector(combined_colors)
 
 		total_votes = np.zeros((combined_points.shape[0], 3))
 		total_votes[:votes.shape[0]] = votes
 
-		#o3d.visualization.draw_geometries([scene])
-
-		assert(len(points) == len(colors))
-		assert(len(points) == num_points)
+		assert(len(combined_points) == len(combined_colors))
 
 		point_cloud = np.asarray([[p[0], p[1], p[2], c[0], c[1], c[2]] for p,c in zip(combined_points, combined_colors)])
 

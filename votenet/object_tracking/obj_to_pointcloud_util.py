@@ -178,6 +178,38 @@ def sample_points(mesh, num_points, sample_strategy):
 
 	return pointcloud
 
+#perform augmentations
+#add noise to points and color
+#delete points in sections?
+def augment_pointcloud(pointcloud):
+
+	point_noise_std = 0.01
+	color_noise_mean = -0.2
+	color_noise_std = 0.1
+
+	color_channel_noise_std = 0.02
+
+	max_holes = 5
+	holes_size_mean = 0.02
+	holes_size_std = 0.02
+
+	pointcloud.points = o3d.utility.Vector3dVector(np.random.normal(np.array(pointcloud.points), point_noise_std))
+	pointcloud.colors = o3d.utility.Vector3dVector(np.array(pointcloud.colors) + np.random.normal(color_noise_mean, color_noise_std))
+	pointcloud.colors = o3d.utility.Vector3dVector(np.random.normal(np.array(pointcloud.colors), color_channel_noise_std))
+
+	kd_tree = o3d.geometry.KDTreeFlann(pointcloud)
+	points = np.array(pointcloud.points)
+	lst = []
+
+	for i in range(np.random.randint(max_holes)):
+		point = points[np.random.randint(points.shape[0])]
+		v = kd_tree.search_radius_vector_3d(point, max(0, np.random.normal(holes_size_mean, holes_size_std)))[1]
+		lst.extend(v)
+
+	pointcloud = pointcloud.select_down_sample(lst, invert=True)
+
+	return pointcloud
+
 #return pointcloud, bounding box, votes, euler_angles
 def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample_strategy='uniform random'):
 
@@ -200,9 +232,11 @@ def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample
 			break
 
 	np.random.shuffle(lst)
-	lst = lst[:points]
-
+	lst = np.array(lst[:points])
 	pointcloud = pointcloud.select_down_sample(lst)
+
+	#insert noise into model
+	pointcloud = augment_pointcloud(pointcloud)
 
 	votes = []
 
@@ -268,14 +302,14 @@ def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strateg
 	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
 	xyz = np.copy(center)
-	if np.random.rand() < 0.5:
+	if np.random.rand() < 0.8:
 		xyz[0] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
 		xyz[1] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
 		xyz[2] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
 	else:
-		xyz[0] += np.random.uniform(0.15, 0.25) * (-1 if np.random.rand() < 0.5 else 1)
-		xyz[1] += np.random.uniform(0.15, 0.25) * (-1 if np.random.rand() < 0.5 else 1)
-		xyz[2] += np.random.uniform(0.15, 0.25) * (-1 if np.random.rand() < 0.5 else 1)
+		xyz[0] += np.random.uniform(0.1, 0.2) * (-1 if np.random.rand() < 0.5 else 1)
+		xyz[1] += np.random.uniform(0.1, 0.2) * (-1 if np.random.rand() < 0.5 else 1)
+		xyz[2] += np.random.uniform(0.1, 0.2) * (-1 if np.random.rand() < 0.5 else 1)
 
 	#return get_perspective_data_from_mesh_axis_angles(mesh, np.asarray(xyz), np.asarray(axis_angles), points, sample_strategy)
 	return get_perspective_data_from_mesh(mesh, np.asarray(xyz), np.asarray(euler_angles), points, sample_strategy)
