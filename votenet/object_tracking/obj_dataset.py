@@ -111,8 +111,6 @@ class OBJDetectionVotesDataset(Dataset):
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_EXTRA_CHANNELS)
         else:
             point_cloud = point_cloud[:,0:3]
-
-        print(point_cloud.shape)
             
 
         #random sample points
