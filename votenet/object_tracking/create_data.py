@@ -4,14 +4,14 @@ import open3d as o3d
 from obj_to_pointcloud_util import *
 
 def main():
-	model_path = 'medical/choukemoduan_v0.obj'
+	model_path = 'medical/choukemoduan_v0.ply'
 	output_path = 'model_data/'
 	scene_path = 'scenes/'
 	number_of_samples = 10
 	training_number = 8
 	testing_number = 2
 	val_number = 0
-	num_points = 1000
+	num_points = 1500
 	scale = 0.001
 
 	assert(os.path.exists(model_path))
@@ -21,10 +21,10 @@ def main():
 
 	assert(training_number + testing_number + val_number == number_of_samples)
 
-	model = convert_obj_to_mesh(model_path, scale)
+	model = convert_file_to_mesh(model_path, scale)
 
 	scenes = []
-	for i in range(123):
+	for i in range(88):
 		scenes.append(o3d.io.read_point_cloud(os.path.join(scene_path, str(i) + '.ply')))
 		#scenes.append('xd')
 
@@ -33,7 +33,7 @@ def main():
 		if i % 100 == 0:
 			print('creating sample ', i + 1, end='\r')
 
-		scene_index = np.random.randint(123)
+		scene_index = np.random.randint(88)
 		scene = scenes[scene_index]
 
 		scene_pts = np.array(scene.points)
@@ -42,28 +42,26 @@ def main():
 		box3d_centers = np.asarray([bb.get_center()])
 		box3d_sizes = np.asarray([bb.get_max_bound() - bb.get_min_bound()])
 
-		# pts = np.array(pcld.points)
-		# print(pts.shape)
-		# colors = np.array(pcld.colors)
-		# print(colors[3])
-		# print(colors[4])
-
-		# o3d.visualization.draw_geometries([pcld, bb])
-
-		# exit()
-
 		points = np.asarray(pcld.points)
 		colors = np.asarray(pcld.colors)
 
 		combined_points = np.vstack((points, np.array(scene.points)))
 		combined_colors = np.vstack((colors, np.array(scene.colors)))
 
+		#pcld_out = o3d.geometry.PointCloud()
+		#pcld_out.points = o3d.utility.Vector3dVector(combined_points)
+		#pcld_out.colors = o3d.utility.Vector3dVector(combined_colors)
+		#o3d.visualization.draw_geometries([pcld_out, bb])
+
 		total_votes = np.zeros((combined_points.shape[0], 3))
 		total_votes[:votes.shape[0]] = votes
 
 		assert(len(combined_points) == len(combined_colors))
 
-		point_cloud = np.asarray([[p[0], p[1], p[2], c[0], c[1], c[2]] for p,c in zip(combined_points, combined_colors)])
+		#point_cloud = np.asarray([[p[0], p[1], p[2], c[0], c[1], c[2]] for p,c in zip(combined_points, combined_colors)])
+
+		#single channel, 1 or 0, after adaptive threshold filter
+		point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(combined_points, combined_colors)])
 
 		vote_mask = np.zeros(combined_points.size)
 		vote_mask[:points.shape[0]] = 1

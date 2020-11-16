@@ -37,6 +37,13 @@ def eulerAnglesToRotationMatrix(theta) :
 
     return R
 
+def convert_ply_to_mesh(filename, scale = 1):
+	mesh = o3d.io.read_triangle_mesh(filename)
+	mesh = mesh.scale(scale)
+	mesh.translate(np.asarray([0, 0, 0]), False)
+	return mesh
+
+
 #scale make sure points of vertices are in meters
 def convert_obj_to_mesh(filename, scale = 1):
 
@@ -92,6 +99,15 @@ def convert_obj_to_mesh(filename, scale = 1):
 	#print('finished obj to mesh')
 
 	return mesh
+
+def convert_file_to_mesh(filename, scale = 1):
+	if filename.endswith('.ply'):
+		return convert_ply_to_mesh(filename, scale)
+	elif filename.endswith('.obj'):
+		return convert_obj_to_mesh(filename, scale)
+	else:
+		print('only have support for ply and obj files')
+		exit(1)
 
 def place_mesh(mesh, xyz, euler_angles):
 	#print('place mesh called')
@@ -236,7 +252,7 @@ def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample
 	pointcloud = pointcloud.select_down_sample(lst)
 
 	#insert noise into model
-	pointcloud = augment_pointcloud(pointcloud)
+	#pointcloud = augment_pointcloud(pointcloud)
 
 	votes = []
 
@@ -323,7 +339,7 @@ def main():
 	args = parser.parse_args()
 	print('starting processing %s' % args.filename)
 
-	mesh = convert_obj_to_mesh(args.filename, 0.001)
+	mesh = convert_file_to_mesh(args.filename, 0.001)
 	o3d.visualization.draw_geometries([mesh])
 	
 	#pcld, bb, votes, euler_angles = get_perspective_data_from_mesh(mesh, np.asarray([1, -3, 2]), np.asarray([0, 0, np.pi / 6]), args.points, args.sample_strategy)

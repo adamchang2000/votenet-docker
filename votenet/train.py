@@ -69,6 +69,7 @@ parser.add_argument('--lr_decay_steps', default='80,120,160', help='When to deca
 parser.add_argument('--lr_decay_rates', default='0.1,0.1,0.1', help='Decay rates for lr decay [default: 0.1,0.1,0.1]')
 parser.add_argument('--no_height', action='store_true', help='Do NOT use height signal in input.')
 parser.add_argument('--use_color', action='store_true', help='Use RGB color in input.')
+parser.add_argument('--channels', type=int,  default=0, help='Number of extra channels in pointcloud. ')
 parser.add_argument('--use_sunrgbd_v2', action='store_true', help='Use V2 box labels for SUN RGB-D dataset')
 parser.add_argument('--overwrite', action='store_true', help='Overwrite existing log and dump folders.')
 parser.add_argument('--dump_results', action='store_true', help='Dump results.')
@@ -160,9 +161,9 @@ elif FLAGS.dataset == 'obj':
     from model_util_obj import OBJDatasetConfig
     DATASET_CONFIG = OBJDatasetConfig()
     TRAIN_DATASET = OBJDetectionVotesDataset(FLAGS.modelpath, split_set='train', num_points=NUM_POINT,
-        use_color=True, augment=True)
+        use_color=FLAGS.use_color, extra_channels=FLAGS.channels, augment=True)
     TEST_DATASET = OBJDetectionVotesDataset(FLAGS.modelpath, split_set='test', num_points=NUM_POINT,
-        use_color=True, augment=False)
+        use_color=FLAGS.use_color, extra_channels=FLAGS.channels, augment=False)
 else:
     print('Unknown dataset %s. Exiting...'%(FLAGS.dataset))
     exit(-1)
@@ -176,7 +177,7 @@ print(len(TRAIN_DATALOADER), len(TEST_DATALOADER))
 # Init the model and optimzier
 MODEL = importlib.import_module(FLAGS.model) # import network module
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-num_input_channel = int(FLAGS.use_color)*3 + int(not FLAGS.no_height)*1
+num_input_channel = int(FLAGS.use_color)*3 + int(not FLAGS.no_height)*1 + int(FLAGS.channels)*1
 
 if FLAGS.model == 'boxnet':
     Detector = MODEL.BoxNet

@@ -60,7 +60,7 @@ def setup(checkpoint_path):
     per_class_proposal = False
     nms_iou = 0.25
     conf_thresh = 0.05
-    faster_eval = False
+    faster_eval = True
 
 
 # ------------------------------------------------------------------------- GLOBAL CONFIG BEG

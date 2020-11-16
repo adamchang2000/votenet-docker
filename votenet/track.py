@@ -6,6 +6,8 @@ from datetime import datetime
 import pyrealsense2 as rs
 import open3d as o3d
 
+from utils.color_util import *
+
 #sample this many points
 NUM_POINTS_NETWORK = 30000
 
@@ -24,7 +26,7 @@ def main():
         exit()
 
     #get the network started
-    setup(args.network_path)
+    #setup(args.network_path)
 
     # Create a pipeline
     pipeline = rs.pipeline()
@@ -46,7 +48,7 @@ def main():
 
     # We will be removing the background of objects more than
     #  clipping_distance_in_meters meters away
-    clipping_distance_in_meters = 3
+    clipping_distance_in_meters = 4
     clipping_distance = clipping_distance_in_meters / depth_scale
 
     # Create an align object
@@ -56,6 +58,8 @@ def main():
     align = rs.align(align_to)
 
     idx = 0
+
+    output_dir = 'output/'
 
     # Streaming loop
     try:
@@ -103,8 +107,16 @@ def main():
 
             depth_image_flatten = depth_image.flatten()
 
+            gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
+            gray_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 9)
+            gray_image_flatten = gray_image.flatten()
+            gray_image_flatten = gray_image_flatten.reshape((gray_image_flatten.shape[0], 1))
+
+            print(pcld.shape)
+            print(gray_image_flatten.shape)
+
             #xyzrgb
-            pcld_input = np.hstack((pcld, color_image_flatten))
+            pcld_input = np.hstack((pcld, gray_image_flatten, gray_image_flatten, gray_image_flatten))
             #get rid of bad depth measurements
             pcld_input = pcld_input[depth_image_flatten > 0].astype(np.float32)
             print('non-zero depth points ', pcld_input.shape)
@@ -116,27 +128,30 @@ def main():
                 pcld_input = pcld_input[index]
 
                 #run network on image
-                run_network(pcld_input)
+                #run_network(pcld_input)
 
-            #save the image frame
-            # save_pcld = o3d.geometry.PointCloud()
-            # save_pcld.points = o3d.utility.Vector3dVector(pcld_input[:,:3])
+            # save the image frame
 
-            # rgb_colors = np.zeros((pcld_input.shape[0], 3))
-            # rgb_colors[:,0] = pcld_input[:,5]
-            # rgb_colors[:,1] = pcld_input[:,4]
-            # rgb_colors[:,2] = pcld_input[:,3]
+            save_pcld = o3d.geometry.PointCloud()
+            save_pcld.points = o3d.utility.Vector3dVector(pcld_input[:,:3])
 
-            # save_pcld.colors = o3d.utility.Vector3dVector(rgb_colors)
-            # o3d.io.write_point_cloud(str(idx) + '.ply', save_pcld, write_ascii=True)
+            rgb_colors = np.zeros((pcld_input.shape[0], 3))
+            rgb_colors[:,0] = pcld_input[:,5]
+            rgb_colors[:,1] = pcld_input[:,4]
+            rgb_colors[:,2] = pcld_input[:,3]
+
+            save_pcld.colors = o3d.utility.Vector3dVector(rgb_colors)
+            o3d.io.write_point_cloud(os.path.join(output_dir, str(idx) + '.ply'), save_pcld, write_ascii=True)
 
             # Render images
             cv2.namedWindow('depth', cv2.WINDOW_AUTOSIZE)
             cv2.namedWindow('color', cv2.WINDOW_AUTOSIZE)
+            cv2.namedWindow('gray', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('depth', depth_image)
             cv2.imshow('color', color_image)
-            cv2.imwrite(str(idx+1)+'.png', color_image)
-            key = cv2.waitKey(1)
+            cv2.imshow('gray', gray_image)
+            cv2.imwrite(os.path.join(output_dir, str(idx)+'.png'), color_image)
+            key = cv2.waitKey(200)
 
             print('elapsed time for frame: ', datetime.now() - timestamp)
 

@@ -36,9 +36,10 @@ from model_util_obj import OBJDatasetConfig
 DC = OBJDatasetConfig() # dataset specific config
 MAX_NUM_OBJ = 1 # maximum number of objects allowed per scene
 MEAN_COLOR_RGB = np.array([0.5,0.5,0.5]) # sunrgbd color is in 0~1
+MEAN_EXTRA_CHANNELS = np.array([0.5])
 
 class OBJDetectionVotesDataset(Dataset):
-    def __init__(self, model_path, split_set='train', num_points=25000, use_color=False, augment=True, dropout_rate=0.2):
+    def __init__(self, model_path, split_set='train', num_points=25000, use_color=False, extra_channels=0, augment=True, dropout_rate=0.2):
 
         #assert(num_points<=100000)
 
@@ -50,6 +51,11 @@ class OBJDetectionVotesDataset(Dataset):
         self.samples = np.load(os.path.join(model_path, split_set + '_samples.npz'))['samples']
         self.num_points = num_points
         self.use_color = use_color
+        self.extra_channels = extra_channels
+
+        #make sure the mean is the same size
+        assert(extra_channels == MEAN_EXTRA_CHANNELS.shape[0])
+        
         self.augment = augment
         self.dropout_rate = dropout_rate
        
@@ -85,9 +91,6 @@ class OBJDetectionVotesDataset(Dataset):
         box3d_centers = data['box3d_centers']
         box3d_sizes = data['box3d_sizes']
         euler_angles = data['euler_angles']
-        #axis_angles = data['axis_angles']
-
-        #print('xd ', axis_angles)
 
         votes = data['votes']
         vote_mask = data['vote_mask']
@@ -99,11 +102,18 @@ class OBJDetectionVotesDataset(Dataset):
         #assert(len(point_cloud) == self.num_points)
 
 
-        if not self.use_color:
-            point_cloud = point_cloud[:,0:3]
-        else:
-            point_cloud = point_cloud[:,0:6]
+        if self.use_color and self.extra_channels > 0:
+            point_cloud = point_cloud[:,0:6 + self.extra_channels]
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_COLOR_RGB)
+            point_cloud[:,6:] = (point_cloud[:,6:]-MEAN_EXTRA_CHANNELS)
+        elif self.extra_channels > 0:
+            point_cloud = point_cloud[:,0:3 + self.extra_channels]
+            point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_EXTRA_CHANNELS)
+        else:
+            point_cloud = point_cloud[:,0:3]
+
+        print(point_cloud.shape)
+            
 
         #random sample points
         n = self.num_points
@@ -268,9 +278,9 @@ def get_sem_cls_statistics():
 
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
-    d = OBJDetectionVotesDataset(sys.argv[1], num_points=50000, use_color=True, augment=True)
+    d = OBJDetectionVotesDataset(sys.argv[1], num_points=25000, extra_channels=1, augment=True)
     sample = d[3]
-    print(sample['vote_label'].shape, sample['vote_label_mask'].shape)
+    print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
     viz_obb(sample['point_clouds'], sample['center_label'], sample['box_label_mask'],
