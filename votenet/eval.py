@@ -36,6 +36,7 @@ parser.add_argument('--cluster_sampling', default='vote_fps', help='Sampling str
 parser.add_argument('--ap_iou_thresholds', default='0.25,0.5', help='A list of AP IoU thresholds [default: 0.25,0.5]')
 parser.add_argument('--no_height', action='store_true', help='Do NOT use height signal in input.')
 parser.add_argument('--use_color', action='store_true', help='Use RGB color in input.')
+parser.add_argument('--channels', type=int,  default=0, help='Number of extra channels in pointcloud. ')
 parser.add_argument('--use_sunrgbd_v2', action='store_true', help='Use SUN RGB-D V2 box labels.')
 parser.add_argument('--use_3d_nms', action='store_true', help='Use 3D NMS instead of 2D NMS.')
 parser.add_argument('--use_cls_nms', action='store_true', help='Use per class NMS.')
@@ -99,7 +100,8 @@ elif FLAGS.dataset == 'obj':
     DATASET_CONFIG = OBJDatasetConfig()
     TEST_DATASET = OBJDetectionVotesDataset(FLAGS.modelpath, 'val', num_points=NUM_POINT,
         augment=False,
-        use_color=FLAGS.use_color)
+        use_color=FLAGS.use_color,
+        extra_channels=FLAGS.channels)
 else:
     print('Unknown dataset %s. Exiting...'%(FLAGS.dataset))
     exit(-1)
@@ -110,7 +112,7 @@ TEST_DATALOADER = DataLoader(TEST_DATASET, batch_size=BATCH_SIZE,
 # Init the model and optimzier
 MODEL = importlib.import_module(FLAGS.model) # import network module
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-num_input_channel = int(FLAGS.use_color)*3 + int(not FLAGS.no_height)*1
+num_input_channel = int(FLAGS.use_color)*3 + int(not FLAGS.no_height)*1 + int(FLAGS.channels)*1
 
 if FLAGS.model == 'boxnet':
     Detector = MODEL.BoxNet
