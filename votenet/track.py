@@ -108,7 +108,7 @@ def main():
             depth_image_flatten = depth_image.flatten()
 
             gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-            gray_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 9)
+            gray_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 15)
             gray_image_flatten = gray_image.flatten()
             gray_image_flatten = gray_image_flatten.reshape((gray_image_flatten.shape[0], 1))
 
@@ -116,7 +116,7 @@ def main():
             print(gray_image_flatten.shape)
 
             #xyzrgb
-            pcld_input = np.hstack((pcld, gray_image_flatten, gray_image_flatten, gray_image_flatten))
+            pcld_input = np.hstack((pcld, gray_image_flatten))
             #get rid of bad depth measurements
             pcld_input = pcld_input[depth_image_flatten > 0].astype(np.float32)
             print('non-zero depth points ', pcld_input.shape)
@@ -136,8 +136,8 @@ def main():
             save_pcld.points = o3d.utility.Vector3dVector(pcld_input[:,:3])
 
             rgb_colors = np.zeros((pcld_input.shape[0], 3))
-            rgb_colors[:,0] = pcld_input[:,5]
-            rgb_colors[:,1] = pcld_input[:,4]
+            rgb_colors[:,0] = pcld_input[:,3]
+            rgb_colors[:,1] = pcld_input[:,3]
             rgb_colors[:,2] = pcld_input[:,3]
 
             save_pcld.colors = o3d.utility.Vector3dVector(rgb_colors)
@@ -150,8 +150,8 @@ def main():
             cv2.imshow('depth', depth_image)
             cv2.imshow('color', color_image)
             cv2.imshow('gray', gray_image)
-            cv2.imwrite(os.path.join(output_dir, str(idx)+'.png'), color_image)
-            key = cv2.waitKey(200)
+            cv2.imwrite(os.path.join(output_dir, str(idx)+'.png'), gray_image)
+            key = cv2.waitKey(100)
 
             print('elapsed time for frame: ', datetime.now() - timestamp)
 

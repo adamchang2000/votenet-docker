@@ -1,13 +1,9 @@
-import pywavefront
 import numpy as np
 import open3d as o3d
 import argparse
 import logging
 import math
-
-pywavefront.configure_logging(
-    logging.ERROR
-)
+import cv2
 
 #format = '%(asctime)s.%(msecs)03d %(levelname)-.1s [%(name)s][%(threadName)s] %(message)s'
 #logging.basicConfig(format=format, level=logging.DEBUG)
@@ -37,117 +33,61 @@ def eulerAnglesToRotationMatrix(theta) :
 
     return R
 
-def convert_ply_to_mesh(filename, scale = 1):
-	mesh = o3d.io.read_triangle_mesh(filename)
-	mesh = mesh.scale(scale)
-	mesh.translate(np.asarray([0, 0, 0]), False)
-	return mesh
+def convert_file_to_model(filename, scale = 1):
+	try:
+		model = o3d.io.read_triangle_mesh(filename)
 
+		#its a pointcloud
+		if np.array(model.triangles).shape[0] == 0:
+			print('seems like the file is a pointcloud')
+			model = o3d.io.read_point_cloud(filename)
 
-#scale make sure points of vertices are in meters
-def convert_obj_to_mesh(filename, scale = 1):
-
-	#print('called convert obj to mesh')
-
-	scene = pywavefront.Wavefront(filename, collect_faces=True)
-	scene.parse()
-
-	vertex_normals = []
-	vertex_pos = []
-	vertex_colors = []
-
-	for name, material in scene.materials.items():
-		i = 0
-
-		while i < len(material.vertices):
-			if material.vertex_format == 'N3F_V3F':
-				vertex_normals.append([material.vertices[i], material.vertices[i+1], material.vertices[i+2]])
-				vertex_pos.append([material.vertices[i+3], material.vertices[i+4], material.vertices[i+5]])
-				i += 6
-			elif material.vertex_format == 'V3F':
-				vertex_pos.append([material.vertices[i], material.vertices[i+1], material.vertices[i+2]])
-				i += 3
-			else:
-				print('uhoh what is this format')
-
-			vertex_colors.append([material.diffuse[0], material.diffuse[1], material.diffuse[2]])
-			
-
-	#print('retrieved data in obj to mesh')
-
-	vertex_normals_np = np.asarray(vertex_normals)
-	vertex_pos_np = np.asarray(vertex_pos)
-
-	mesh = o3d.geometry.TriangleMesh()
-
-	triangles = [[3*i, 3*i+1, 3*i+2] for i in range(int(len(vertex_pos) / 3))]
-
-	mesh.triangles = o3d.utility.Vector3iVector(triangles)
-	mesh.vertices = o3d.utility.Vector3dVector(vertex_pos)
-
-	if len(vertex_normals) > 0:
-		mesh.vertex_normals = o3d.utility.Vector3dVector(vertex_normals)
-	else:
-		mesh.compute_vertex_normals()
-	mesh.vertex_colors = o3d.utility.Vector3dVector(vertex_colors)
-
-	#print('filled mesh in obj to mesh')
-
-	mesh.scale(scale)
-	mesh.translate(np.asarray([0, 0, 0]), False)
-
-	#print('finished obj to mesh')
-
-	return mesh
-
-def convert_file_to_mesh(filename, scale = 1):
-	if filename.endswith('.ply'):
-		return convert_ply_to_mesh(filename, scale)
-	elif filename.endswith('.obj'):
-		return convert_obj_to_mesh(filename, scale)
-	else:
-		print('only have support for ply and obj files')
+		model.scale(scale)
+		model.translate(np.asarray([0, 0, 0]), False)
+		return model
+	except:
+		print('load failed xd')
 		exit(1)
 
-def place_mesh(mesh, xyz, euler_angles):
-	#print('place mesh called')
-	rotate_matrix_euler(euler_angles, mesh)
-	mesh.translate(xyz)
+def place_model(model, xyz, euler_angles):
+	#print('place model called')
+	rotate_matrix_euler(euler_angles, model)
+	model.translate(xyz)
 
-def return_origin(mesh, xyz, euler_angles):
+def return_origin(model, xyz, euler_angles):
 	#print('return origin called')
-	mesh.translate(-1 * xyz)
-	invert_rotate_matrix_euler(euler_angles, mesh)
+	model.translate(-1 * xyz)
+	invert_rotate_matrix_euler(euler_angles, model)
 
-def place_mesh_axis_angles(mesh, xyz, axis_angles):
-	rotate_matrix_axis_angle(axis_angles, mesh)
-	mesh.translate(xyz)
+def place_model_axis_angles(model, xyz, axis_angles):
+	rotate_matrix_axis_angle(axis_angles, model)
+	model.translate(xyz)
 
-def return_origin_axis_angles(mesh, xyz, axis_angles):
-	mesh.translate(-1 * xyz)
-	rotate_matrix_axis_angle(-1 * axis_angles, mesh)
+def return_origin_axis_angles(model, xyz, axis_angles):
+	model.translate(-1 * xyz)
+	rotate_matrix_axis_angle(-1 * axis_angles, model)
 
-def get_bb(mesh):
-	bb = mesh.get_axis_aligned_bounding_box()
+def get_bb(model):
+	bb = model.get_axis_aligned_bounding_box()
 	return bb
 
-def rotate_matrix_euler(euler_angles, mesh):
+def rotate_matrix_euler(euler_angles, model):
 	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
-	mesh.rotate(eulerAnglesToRotationMatrix(euler_angles))
-	return mesh
+	model.rotate(eulerAnglesToRotationMatrix(euler_angles))
+	return model
 
-def invert_rotate_matrix_euler(euler_angles, mesh):
+def invert_rotate_matrix_euler(euler_angles, model):
 	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
-	mesh.rotate(eulerAnglesToRotationMatrix(euler_angles).T)
-	return mesh
+	model.rotate(eulerAnglesToRotationMatrix(euler_angles).T)
+	return model
 
-def rotate_matrix_axis_angle(axis_angle, mesh):
+def rotate_matrix_axis_angle(axis_angle, model):
 	#print('axis angle ', o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angle))
-	mesh.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angle))
-	return mesh
+	model.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angle))
+	return model
 
-def get_x_vec(mesh):
-	center = np.asarray(mesh.get_center())
+def get_x_vec(model):
+	center = np.asarray(model.get_center())
 
 	lst = []
 	for i in range(100):
@@ -157,8 +97,8 @@ def get_x_vec(mesh):
 	pcld.points = o3d.utility.Vector3dVector(np.asarray(lst))
 	return pcld
 
-def get_y_vec(mesh):
-	center = np.asarray(mesh.get_center())
+def get_y_vec(model):
+	center = np.asarray(model.get_center())
 
 	lst = []
 	for i in range(100):
@@ -168,8 +108,8 @@ def get_y_vec(mesh):
 	pcld.points = o3d.utility.Vector3dVector(np.asarray(lst))
 	return pcld
 
-def get_z_vec(mesh):
-	center = np.asarray(mesh.get_center())
+def get_z_vec(model):
+	center = np.asarray(model.get_center())
 
 	lst = []
 	for i in range(100):
@@ -179,18 +119,30 @@ def get_z_vec(mesh):
 	pcld.points = o3d.utility.Vector3dVector(np.asarray(lst))
 	return pcld
 
-def sample_points(mesh, num_points, sample_strategy):
-	if sample_strategy not in ['uniform random', 'uniform grid']:
-		print('%s not uniform random or uniform grid' % sample_strategy)
-		sys.exit(1)
+def sample_points(model, num_points, sample_strategy):
 
-	if sample_strategy == 'uniform random':
-		pointcloud = mesh.sample_points_uniformly(num_points)
+	if type(model) == type(o3d.geometry.TriangleMesh()):
+		
 
-	elif sample_strategy == 'uniform grid':
-		print('dont know if uniform grid works, just exit for now')
-		sys.exit(1)
-		pointcloud = mesh.sample_points_poisson_disk(num_points)
+		if sample_strategy not in ['uniform random', 'uniform grid']:
+			print('%s not uniform random or uniform grid' % sample_strategy)
+			sys.exit(1)
+
+		if sample_strategy == 'uniform random':
+			pointcloud = model.sample_points_uniformly(num_points)
+
+		elif sample_strategy == 'uniform grid':
+			print('dont know if uniform grid works, just exit for now')
+			sys.exit(1)
+			pointcloud = model.sample_points_poisson_disk(num_points)
+
+	elif type(model) == type(o3d.geometry.PointCloud()):
+		lst = np.random.choice(np.array(model.points).shape[0], num_points)
+		pointcloud = model.select_down_sample(lst)
+
+	else:
+		print('only can sample points from trianglemesh or pointcloud, not %s' % repr(type(model)))
+		exit(1)
 
 	return pointcloud
 
@@ -227,19 +179,18 @@ def augment_pointcloud(pointcloud):
 	return pointcloud
 
 #return pointcloud, bounding box, votes, euler_angles
-def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample_strategy='uniform random'):
+def get_perspective_data_from_model(model, xyz, euler_angles, points=20000, sample_strategy='uniform random'):
 
 	#print('perspective data called')
 
-	bb = get_bb(mesh)
-	place_mesh(mesh, xyz, euler_angles)
-
+	bb = get_bb(model)
+	place_model(model, xyz, euler_angles)
 	bb.translate(xyz)
 
 	#multiply points by 2 for more visible points
 	factor = 5
 	while True:
-		pointcloud = sample_points(mesh, points * factor, sample_strategy)
+		pointcloud = sample_points(model, points * factor, sample_strategy)
 		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 10000)
 
 		if len(lst) < points:
@@ -259,30 +210,30 @@ def get_perspective_data_from_mesh(mesh, xyz, euler_angles, points=20000, sample
 	for pt in pointcloud.points:
 		votes.append(bb.get_center() - pt)
 
-	return_origin(mesh, xyz, euler_angles)
+	return_origin(model, xyz, euler_angles)
 
 	return pointcloud, bb, np.asarray(votes), euler_angles
 
 #return pointcloud, bounding box, votes, axis_angles
-def get_perspective_data_from_mesh_axis_angles(mesh, xyz, axis_angles, points=20000, sample_strategy='uniform random'):
+def get_perspective_data_from_model_axis_angles(model, xyz, axis_angles, points=20000, sample_strategy='uniform random'):
 
-	bb = get_bb(mesh)
+	bb = get_bb(model)
 
-	place_mesh_axis_angles(mesh, xyz, axis_angles)
+	place_model_axis_angles(model, xyz, axis_angles)
 
 	bb.translate(xyz)
 
-	print('mesh center ', mesh.get_center())
+	print('model center ', model.get_center())
 	print('bb center ', bb.get_center())
 	
 	#multiply points by 2 for more visible points
 	factor = 5
 	while True:
-		pointcloud = sample_points(mesh, points * factor, sample_strategy)
+		pointcloud = sample_points(model, points * factor, sample_strategy)
 
 		o3d.visualization.draw_geometries([pcld])
 
-		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 10000)
+		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 500)
 
 		if len(lst) < points:
 			factor += 2
@@ -300,12 +251,12 @@ def get_perspective_data_from_mesh_axis_angles(mesh, xyz, axis_angles, points=20
 	for pt in pointcloud.points:
 		votes.append(bb.get_center() - pt)
 
-	return_origin_axis_angles(mesh, xyz, axis_angles)
+	return_origin_axis_angles(model, xyz, axis_angles)
 
 	return pointcloud, bb, np.asarray(votes), axis_angles
 
 #return pointcloud, bb, votes, axis angles
-def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strategy='uniform random', center=np.array([0, 0, 0])):
+def get_perspective_data_from_model_seed(seed, model, points=20000, sample_strategy='uniform random', center=np.array([0, 0, 0])):
 	np.random.seed(seed)
 	#axis_angles = np.array([1, 0, 0])
 	# axis_angles = np.array([0, 0, 1])
@@ -318,7 +269,7 @@ def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strateg
 	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
 	xyz = np.copy(center)
-	if np.random.rand() < 0.8:
+	if np.random.rand() < 1:
 		xyz[0] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
 		xyz[1] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
 		xyz[2] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
@@ -327,11 +278,11 @@ def get_perspective_data_from_mesh_seed(seed, mesh, points=20000, sample_strateg
 		xyz[1] += np.random.uniform(0.1, 0.2) * (-1 if np.random.rand() < 0.5 else 1)
 		xyz[2] += np.random.uniform(0.1, 0.2) * (-1 if np.random.rand() < 0.5 else 1)
 
-	#return get_perspective_data_from_mesh_axis_angles(mesh, np.asarray(xyz), np.asarray(axis_angles), points, sample_strategy)
-	return get_perspective_data_from_mesh(mesh, np.asarray(xyz), np.asarray(euler_angles), points, sample_strategy)
+	#return get_perspective_data_from_model_axis_angles(model, np.asarray(xyz), np.asarray(axis_angles), points, sample_strategy)
+	return get_perspective_data_from_model(model, np.asarray(xyz), np.asarray(euler_angles), points, sample_strategy)
 
 def main():
-	parser = argparse.ArgumentParser(description='Extract a mesh and data from an obj')
+	parser = argparse.ArgumentParser(description='Extract a model and data from an obj')
 	parser.add_argument('--filename', default='embroidery_hoop/inner_hoop.obj', help='file path to obj')
 	parser.add_argument('-n', dest='points', default=10000, type=int, help='number of points to sample, default = 20k')
 	parser.add_argument('-s', dest='sample_strategy', default='uniform random', help='point sampling strategy, available: uniform random, uniform grid')
@@ -339,14 +290,14 @@ def main():
 	args = parser.parse_args()
 	print('starting processing %s' % args.filename)
 
-	mesh = convert_file_to_mesh(args.filename, 0.001)
-	o3d.visualization.draw_geometries([mesh])
+	model = convert_file_to_model(args.filename, 0.001)
+	o3d.visualization.draw_geometries([model])
 	
-	#pcld, bb, votes, euler_angles = get_perspective_data_from_mesh(mesh, np.asarray([1, -3, 2]), np.asarray([0, 0, np.pi / 6]), args.points, args.sample_strategy)
+	#pcld, bb, votes, euler_angles = get_perspective_data_from_model(model, np.asarray([1, -3, 2]), np.asarray([0, 0, np.pi / 6]), args.points, args.sample_strategy)
 
 	#o3d.visualization.draw_geometries([pcld, bb])
 
-	pcld, bb, votes, euler_angles = get_perspective_data_from_mesh_seed(3, mesh, args.points, args.sample_strategy)
+	pcld, bb, votes, euler_angles = get_perspective_data_from_model_seed(3, model, args.points, args.sample_strategy)
 
 	print(bb.get_max_bound())
 	print(bb.get_min_bound())

@@ -1,0 +1,5 @@
+get a model
+load up in blender, texture the model
+load the model up in meshlab
+use sampling -> texel sampling to get a pointcloud with proper colors
+victory.

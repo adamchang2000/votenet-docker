@@ -49,8 +49,9 @@ def setup(checkpoint_path):
     #parser.add_argument('--conf_thresh', type=float, default=0.05, help='Filter out predictions with obj prob less than it. [default: 0.05]')
     #parser.add_argument('--faster_eval', action='store_true', help='Faster evaluation by skippling empty bounding box removal.')
 
-    num_point = 8000
-    use_color = True
+    num_point = 25000
+    use_color = False
+    channels = 1
     num_target = 256
     vote_factor = 1
     cluster_sampling = 'vote_fps'
@@ -60,7 +61,7 @@ def setup(checkpoint_path):
     per_class_proposal = False
     nms_iou = 0.25
     conf_thresh = 0.05
-    faster_eval = True
+    faster_eval = False
 
 
 # ------------------------------------------------------------------------- GLOBAL CONFIG BEG
@@ -73,7 +74,7 @@ def setup(checkpoint_path):
     # Init the model and optimzier
     MODEL = importlib.import_module('votenet') # import network module
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    num_input_channel = int(use_color)*3
+    num_input_channel = int(use_color)*3 + int(channels)*1
 
     Detector = MODEL.VoteNet
 

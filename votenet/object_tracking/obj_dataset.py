@@ -277,8 +277,8 @@ def get_sem_cls_statistics():
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
     d = OBJDetectionVotesDataset(sys.argv[1], num_points=25000, extra_channels=1, augment=True)
-    sample = d[3]
-    print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
+    sample = d[2]
+    #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
     viz_obb(sample['point_clouds'], sample['center_label'], sample['box_label_mask'],
