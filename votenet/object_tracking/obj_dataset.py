@@ -23,6 +23,7 @@ Date: 2019
 import os
 import sys
 import numpy as np
+import open3d as o3d
 from torch.utils.data import Dataset
 import scipy.io as sio # to load .mat files for depth points
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
