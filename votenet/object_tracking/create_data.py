@@ -11,7 +11,7 @@ def main():
 	training_number = 80
 	testing_number = 20
 	val_number = 0
-	num_points = 1000
+	num_points = 5000
 	scale = 0.001
 
 	assert(os.path.exists(model_path))
@@ -22,10 +22,10 @@ def main():
 	assert(training_number + testing_number + val_number == number_of_samples)
 
 	model = convert_file_to_model(model_path, scale)
-	#o3d.visualization.draw_geometries([model])
+	o3d.visualization.draw_geometries([model])
 
 	scenes = []
-	for i in range(70):
+	for i in range(27):
 		scenes.append(o3d.io.read_point_cloud(os.path.join(scene_path, str(i) + '.ply')))
 		#scenes.append('xd')
 
@@ -34,7 +34,7 @@ def main():
 		if i % 50 == 1:
 			print('creating sample ', i, end='\r')
 
-		scene_index = np.random.randint(70)
+		scene_index = np.random.randint(27)
 		scene = scenes[scene_index]
 
 		scene_pts = np.array(scene.points)
@@ -53,11 +53,13 @@ def main():
 		combined_colors = np.vstack((colors, np.array(scene.colors)))
 
 		pcld_out = o3d.geometry.PointCloud()
-		pcld_out.points = o3d.utility.Vector3dVector(combined_points)
-		pcld_out.colors = o3d.utility.Vector3dVector(combined_colors)
+		pcld_out.points = o3d.utility.Vector3dVector(points)
+		pcld_out.colors = o3d.utility.Vector3dVector(colors)
 		
 		#o3d.visualization.draw_geometries([pcld_out, bb])
 		#o3d.io.write_point_cloud(str(i) + '.ply', pcld_out)
+
+		#exit()
 
 		total_votes = np.zeros((combined_points.shape[0], 3))
 		total_votes[:votes.shape[0]] = votes
