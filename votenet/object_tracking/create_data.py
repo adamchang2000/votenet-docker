@@ -4,14 +4,14 @@ import open3d as o3d
 from obj_to_pointcloud_util import *
 
 def main():
-	model_path = 'medical/texture_medical_sampled.ply'
+	model_path = 'medical/new_textured_medical_patterns.ply'
 	output_path = 'model_data/'
 	scene_path = 'scenes/'
 	number_of_samples = 100
 	training_number = 80
 	testing_number = 20
 	val_number = 0
-	num_points = 4000
+	num_points = 1000
 	scale = 0.001
 
 	assert(os.path.exists(model_path))
@@ -25,7 +25,7 @@ def main():
 	#o3d.visualization.draw_geometries([model])
 
 	scenes = []
-	for i in range(86):
+	for i in range(70):
 		scenes.append(o3d.io.read_point_cloud(os.path.join(scene_path, str(i) + '.ply')))
 		#scenes.append('xd')
 
@@ -34,7 +34,7 @@ def main():
 		if i % 50 == 1:
 			print('creating sample ', i, end='\r')
 
-		scene_index = np.random.randint(86)
+		scene_index = np.random.randint(70)
 		scene = scenes[scene_index]
 
 		scene_pts = np.array(scene.points)
