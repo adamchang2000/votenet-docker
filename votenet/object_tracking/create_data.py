@@ -22,7 +22,7 @@ def main():
 	assert(training_number + testing_number + val_number == number_of_samples)
 
 	model = convert_file_to_model(model_path, scale)
-	o3d.visualization.draw_geometries([model])
+	#o3d.visualization.draw_geometries([model])
 
 	scenes = []
 	for i in range(27):
