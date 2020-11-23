@@ -9,7 +9,7 @@ import open3d as o3d
 from utils.color_util import *
 
 #sample this many points
-NUM_POINTS_NETWORK = 30000
+NUM_POINTS_NETWORK = 75000
 
 def main():
     parser = argparse.ArgumentParser(description='Track an object')
@@ -48,7 +48,7 @@ def main():
 
     # We will be removing the background of objects more than
     #  clipping_distance_in_meters meters away
-    clipping_distance_in_meters = 4
+    clipping_distance_in_meters = 2
     clipping_distance = clipping_distance_in_meters / depth_scale
 
     # Create an align object
@@ -108,12 +108,13 @@ def main():
             depth_image_flatten = depth_image.flatten()
 
             gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-            gray_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 15)
+            #gray_image = adaptive_threshold_3d_surface(gray_image, depth_image)
+            gray_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 51, 10)
             gray_image_flatten = gray_image.flatten()
             gray_image_flatten = gray_image_flatten.reshape((gray_image_flatten.shape[0], 1))
 
-            print(pcld.shape)
-            print(gray_image_flatten.shape)
+            #print(pcld.shape)
+            #print(gray_image_flatten.shape)
 
             #xyzrgb
             pcld_input = np.hstack((pcld, gray_image_flatten))
@@ -150,8 +151,9 @@ def main():
             cv2.imshow('depth', depth_image)
             cv2.imshow('color', color_image)
             cv2.imshow('gray', gray_image)
-            cv2.imwrite(os.path.join(output_dir, str(idx)+'.png'), gray_image)
-            key = cv2.waitKey(100)
+            cv2.imwrite(os.path.join(output_dir, str(idx)+'.png'), color_image)
+            cv2.imwrite(os.path.join(output_dir, str(idx)+'d.png'), depth_image)
+            key = cv2.waitKey(1)
 
             print('elapsed time for frame: ', datetime.now() - timestamp)
 
