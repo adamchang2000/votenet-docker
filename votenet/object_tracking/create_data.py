@@ -6,7 +6,7 @@ from obj_to_pointcloud_util import *
 def main():
 	model_path = 'medical/new_textured_medical_patterns.ply'
 	output_path = 'model_data/'
-	scene_path = 'scenes_1/'
+	scene_path = 'scenes/'
 	number_of_samples = 100
 	training_number = 80
 	testing_number = 20
