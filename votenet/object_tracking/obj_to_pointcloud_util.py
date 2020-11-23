@@ -59,14 +59,6 @@ def return_origin(model, xyz, euler_angles):
 	model.translate(-1 * xyz)
 	invert_rotate_matrix_euler(euler_angles, model)
 
-def place_model_axis_angles(model, xyz, axis_angles):
-	rotate_matrix_axis_angle(axis_angles, model)
-	model.translate(xyz)
-
-def return_origin_axis_angles(model, xyz, axis_angles):
-	model.translate(-1 * xyz)
-	rotate_matrix_axis_angle(-1 * axis_angles, model)
-
 def get_bb(model):
 	bb = model.get_axis_aligned_bounding_box()
 	return bb
@@ -79,11 +71,6 @@ def rotate_matrix_euler(euler_angles, model):
 def invert_rotate_matrix_euler(euler_angles, model):
 	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
 	model.rotate(eulerAnglesToRotationMatrix(euler_angles).T)
-	return model
-
-def rotate_matrix_axis_angle(axis_angle, model):
-	#print('axis angle ', o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angle))
-	model.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angle))
 	return model
 
 def get_x_vec(model):
@@ -187,6 +174,9 @@ def get_perspective_data_from_model(model, xyz, euler_angles, points=20000, samp
 	place_model(model, xyz, euler_angles)
 	bb.translate(xyz)
 
+	#print('model center ', model.get_center())
+	#print('bb center ', bb.get_center())
+
 	#multiply points by 2 for more visible points
 	factor = 5
 	while True:
@@ -214,54 +204,11 @@ def get_perspective_data_from_model(model, xyz, euler_angles, points=20000, samp
 
 	return pointcloud, bb, np.asarray(votes), euler_angles
 
-#return pointcloud, bounding box, votes, axis_angles
-def get_perspective_data_from_model_axis_angles(model, xyz, axis_angles, points=20000, sample_strategy='uniform random'):
-
-	bb = get_bb(model)
-
-	place_model_axis_angles(model, xyz, axis_angles)
-
-	bb.translate(xyz)
-
-	print('model center ', model.get_center())
-	print('bb center ', bb.get_center())
-	
-	#multiply points by 2 for more visible points
-	factor = 5
-	while True:
-		pointcloud = sample_points(model, points * factor, sample_strategy)
-
-		o3d.visualization.draw_geometries([pcld])
-
-		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 500)
-
-		if len(lst) < points:
-			factor += 2
-		else:
-			break
-
-
-	np.random.shuffle(lst)
-	lst = lst[:points]
-
-	pointcloud = pointcloud.select_down_sample(lst)
-
-	votes = []
-
-	for pt in pointcloud.points:
-		votes.append(bb.get_center() - pt)
-
-	return_origin_axis_angles(model, xyz, axis_angles)
-
-	return pointcloud, bb, np.asarray(votes), axis_angles
-
-#return pointcloud, bb, votes, axis angles
-def get_perspective_data_from_model_seed(seed, model, points=20000, sample_strategy='uniform random', center=np.array([0, 0, 0])):
+#return pointcloud, bb, votes, euler angles
+def get_perspective_data_from_model_seed(seed, model, points=20000, sample_strategy='uniform random', center=np.array([0, 0, 0]), scene_scale = 1):
 	np.random.seed(seed)
-	#axis_angles = np.array([1, 0, 0])
-	# axis_angles = np.array([0, 0, 1])
-	# axis_angles = axis_angles / np.linalg.norm(axis_angles)
-	# axis_angles *= (-np.pi + (np.random.uniform(0, 1) * 2 * np.pi))
+
+	#print('center ', center)
 
 	euler_angles = np.zeros(3)
 	euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
@@ -269,16 +216,10 @@ def get_perspective_data_from_model_seed(seed, model, points=20000, sample_strat
 	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
 	xyz = np.copy(center)
-	if np.random.rand() < 1:
-		xyz[0] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
-		xyz[1] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
-		xyz[2] += np.random.uniform(0.05, 0.1) * (-1 if np.random.rand() < 0.5 else 1)
-	else:
-		xyz[0] += np.random.uniform(0.1, 0.2) * (-1 if np.random.rand() < 0.5 else 1)
-		xyz[1] += np.random.uniform(0.1, 0.2) * (-1 if np.random.rand() < 0.5 else 1)
-		xyz[2] += np.random.uniform(0.1, 0.2) * (-1 if np.random.rand() < 0.5 else 1)
+	xyz[0] += np.random.uniform(0.01, 0.1) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
+	xyz[1] += np.random.uniform(0.01, 0.1) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
+	xyz[2] += np.random.uniform(0.01, 0.1) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
 
-	#return get_perspective_data_from_model_axis_angles(model, np.asarray(xyz), np.asarray(axis_angles), points, sample_strategy)
 	return get_perspective_data_from_model(model, np.asarray(xyz), np.asarray(euler_angles), points, sample_strategy)
 
 def main():

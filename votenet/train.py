@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+Hello, World!Hello, World!Hello, World!# Copyright (c) Facebook, Inc. and its affiliates.
 # 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -67,6 +67,7 @@ parser.add_argument('--bn_decay_step', type=int, default=20, help='Period of BN 
 parser.add_argument('--bn_decay_rate', type=float, default=0.5, help='Decay rate for BN decay [default: 0.5]')
 parser.add_argument('--lr_decay_steps', default='80,120,160', help='When to decay the learning rate (in epochs) [default: 80,120,160]')
 parser.add_argument('--lr_decay_rates', default='0.1,0.1,0.1', help='Decay rates for lr decay [default: 0.1,0.1,0.1]')
+parser.add_argument('--lr_decay', default='0.001', help='Decay rate, lr = base_learning_rate * 1 / (1 + decay rate * iteration)')
 parser.add_argument('--no_height', action='store_true', help='Do NOT use height signal in input.')
 parser.add_argument('--use_color', action='store_true', help='Use RGB color in input.')
 parser.add_argument('--channels', type=int,  default=0, help='Number of extra channels in pointcloud. ')
@@ -83,7 +84,7 @@ MAX_EPOCH = FLAGS.max_epoch
 BASE_LEARNING_RATE = FLAGS.learning_rate
 
 #????
-BASE_LEARNING_RATE = 0.001
+BASE_LEARNING_RATE = 0.0001
 
 BN_DECAY_STEP = FLAGS.bn_decay_step
 BN_DECAY_RATE = FLAGS.bn_decay_rate
@@ -227,15 +228,13 @@ BN_MOMENTUM_MAX = 0.001
 bn_lbmd = lambda it: max(BN_MOMENTUM_INIT * BN_DECAY_RATE**(int(it / BN_DECAY_STEP)), BN_MOMENTUM_MAX)
 bnm_scheduler = BNMomentumScheduler(net, bn_lambda=bn_lbmd, last_epoch=start_epoch-1)
 
-def get_current_lr(epoch):
-    lr = BASE_LEARNING_RATE
-    for i,lr_decay_epoch in enumerate(LR_DECAY_STEPS):
-        if epoch >= lr_decay_epoch:
-            lr *= LR_DECAY_RATES[i]
+LR_DECAY_RATE = FLAGS.lr_decay
+def get_current_lr(iter_count):
+    lr = BASE_LEARNING_RATE * 1 / (1 + LR_DECAY_RATE * iter_count)
     return lr
 
-def adjust_learning_rate(optimizer, epoch):
-    lr = get_current_lr(epoch)
+def adjust_learning_rate(optimizer, iter_count):
+    lr = get_current_lr(iter_count)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -306,15 +305,17 @@ def plot_grad_flow(named_parameters, i):
                 Line2D([0], [0], color="k", lw=4)], ['max-gradient', 'mean-gradient', 'zero-gradient'])
     plt.savefig('grad_flow' + str(i) + '.png')
 
+ITER_CNT = 0
 def train_one_epoch():
+    global ITER_CNT
     stat_dict = {} # collect statistics
-    adjust_learning_rate(optimizer, EPOCH_CNT)
+    
     bnm_scheduler.step() # decay BN momentum
     net.train() # set model to training mode
     for batch_idx, batch_data_label in enumerate(TRAIN_DATALOADER):
         for key in batch_data_label:
             batch_data_label[key] = batch_data_label[key].to(device)
-
+        adjust_learning_rate(optimizer, ITER_CNT)
         # Forward pass
         optimizer.zero_grad()
         inputs = {'point_clouds': batch_data_label['point_clouds']}
@@ -328,6 +329,7 @@ def train_one_epoch():
         loss.backward()
         optimizer.step()
             
+        ITER_CNT += 1
 
         # Accumulate statistics and print out
         for key in end_points:
@@ -343,6 +345,7 @@ def train_one_epoch():
             for key in sorted(stat_dict.keys()):
                 log_string('mean %s: %f'%(key, stat_dict[key]/batch_interval))
                 stat_dict[key] = 0
+
 
 def evaluate_one_epoch():
     stat_dict = {} # collect statistics

@@ -6,13 +6,15 @@ from obj_to_pointcloud_util import *
 def main():
 	model_path = 'medical/new_textured_medical_patterns.ply'
 	output_path = 'model_data/'
-	scene_path = 'scenes/'
+	scene_path = 'scenes_1/'
 	number_of_samples = 100
 	training_number = 80
 	testing_number = 20
 	val_number = 0
-	num_points = 5000
-	scale = 0.001
+	num_points = 1000
+	scale_output_pcld = 0.3
+	scale = 0.001 * scale_output_pcld
+	
 
 	assert(os.path.exists(model_path))
 
@@ -22,12 +24,13 @@ def main():
 	assert(training_number + testing_number + val_number == number_of_samples)
 
 	model = convert_file_to_model(model_path, scale)
-	#o3d.visualization.draw_geometries([model])
+	# print(model.get_max_bound())
+	# print(model.get_min_bound())
+	# o3d.visualization.draw_geometries([model])
 
 	scenes = []
 	for i in range(27):
 		scenes.append(o3d.io.read_point_cloud(os.path.join(scene_path, str(i) + '.ply')))
-		#scenes.append('xd')
 
 	for i in range(number_of_samples):
 
@@ -37,9 +40,9 @@ def main():
 		scene_index = np.random.randint(27)
 		scene = scenes[scene_index]
 
-		scene_pts = np.array(scene.points)
+		scene_pts = np.array(scene.points) * scale_output_pcld
 
-		pcld, bb, votes, euler_angles = get_perspective_data_from_model_seed(i, model, points=num_points, center = scene_pts[np.random.randint(scene_pts.shape[0])])
+		pcld, bb, votes, euler_angles = get_perspective_data_from_model_seed(i, model, points=num_points, center = scene_pts[np.random.randint(scene_pts.shape[0])], scene_scale = scale_output_pcld)
 
 		#o3d.visualization.draw_geometries([pcld, bb])
 
@@ -49,12 +52,12 @@ def main():
 		points = np.asarray(pcld.points)
 		colors = np.asarray(pcld.colors)
 
-		combined_points = np.vstack((points, np.array(scene.points)))
+		combined_points = np.vstack((points, np.array(scene_pts))) 
 		combined_colors = np.vstack((colors, np.array(scene.colors)))
 
 		pcld_out = o3d.geometry.PointCloud()
-		pcld_out.points = o3d.utility.Vector3dVector(points)
-		pcld_out.colors = o3d.utility.Vector3dVector(colors)
+		pcld_out.points = o3d.utility.Vector3dVector(combined_points)
+		#pcld_out.colors = o3d.utility.Vector3dVector(colors)
 		
 		#o3d.visualization.draw_geometries([pcld_out, bb])
 		#o3d.io.write_point_cloud(str(i) + '.ply', pcld_out)
