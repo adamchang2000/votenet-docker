@@ -316,7 +316,7 @@ def train_one_epoch():
         for key in batch_data_label:
             batch_data_label[key] = batch_data_label[key].to(device)
         adjust_learning_rate(optimizer, ITER_CNT)
-        log_string('Debug: current learning rate: %f, %d'%(get_current_lr(ITER_CNT), ITER_CNT))
+        #log_string('Debug: current learning rate: %f, %d'%(get_current_lr(ITER_CNT), ITER_CNT))
         # Forward pass
         optimizer.zero_grad()
         inputs = {'point_clouds': batch_data_label['point_clouds']}
