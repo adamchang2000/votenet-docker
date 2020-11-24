@@ -6,12 +6,12 @@ from obj_to_pointcloud_util import *
 def main():
 	model_path = 'medical/new_textured_medical_patterns.ply'
 	output_path = 'model_data/'
-	scene_path = 'scenes/'
+	scene_path = 'scenes_2/'
 	number_of_samples = 100
 	training_number = 80
 	testing_number = 20
 	val_number = 0
-	num_points = 1000
+	num_points = 4000
 	scale_output_pcld = 0.3
 	scale = 0.001 * scale_output_pcld
 	
@@ -26,10 +26,10 @@ def main():
 	model = convert_file_to_model(model_path, scale)
 	# print(model.get_max_bound())
 	# print(model.get_min_bound())
-	# o3d.visualization.draw_geometries([model])
+	o3d.visualization.draw_geometries([model])
 
 	scenes = []
-	for i in range(27):
+	for i in range(52):
 		scenes.append(o3d.io.read_point_cloud(os.path.join(scene_path, str(i) + '.ply')))
 
 	for i in range(number_of_samples):
@@ -37,7 +37,7 @@ def main():
 		if i % 50 == 1:
 			print('creating sample ', i, end='\r')
 
-		scene_index = np.random.randint(27)
+		scene_index = np.random.randint(52)
 		scene = scenes[scene_index]
 
 		scene_pts = np.array(scene.points) * scale_output_pcld
