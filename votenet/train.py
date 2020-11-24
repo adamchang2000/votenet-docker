@@ -204,6 +204,8 @@ criterion = MODEL.get_loss
 # Load the Adam optimizer
 optimizer = optim.Adam(net.parameters(), lr=BASE_LEARNING_RATE, weight_decay=FLAGS.weight_decay)
 
+ITER_CNT = 0
+
 # Load checkpoint if there is any
 it = -1 # for the initialize value of `LambdaLR` and `BNMomentumScheduler`
 start_epoch = 0
@@ -220,6 +222,7 @@ if CHECKPOINT_PATH is not None and os.path.isfile(CHECKPOINT_PATH):
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     start_epoch = checkpoint['epoch']
     log_string("-> loaded checkpoint %s (epoch: %d)"%(CHECKPOINT_PATH, start_epoch))
+    ITER_CNT = int(start_epoch * 100)
 
 # Decay Batchnorm momentum from 0.5 to 0.999
 # note: pytorch's BN momentum (default 0.1)= 1 - tensorflow's BN momentum
@@ -305,7 +308,7 @@ def plot_grad_flow(named_parameters, i):
                 Line2D([0], [0], color="k", lw=4)], ['max-gradient', 'mean-gradient', 'zero-gradient'])
     plt.savefig('grad_flow' + str(i) + '.png')
 
-ITER_CNT = 0
+
 def train_one_epoch():
     global ITER_CNT
     stat_dict = {} # collect statistics
