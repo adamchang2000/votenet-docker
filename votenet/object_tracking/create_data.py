@@ -26,7 +26,7 @@ def main():
 	model = convert_file_to_model(model_path, scale)
 	# print(model.get_max_bound())
 	# print(model.get_min_bound())
-	o3d.visualization.draw_geometries([model])
+	#o3d.visualization.draw_geometries([model])
 
 	scenes = []
 	for i in range(52):
