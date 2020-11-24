@@ -9,7 +9,7 @@ import open3d as o3d
 from utils.color_util import *
 
 #sample this many points
-NUM_POINTS_NETWORK = 75000
+NUM_POINTS_NETWORK = 100000
 
 def main():
     parser = argparse.ArgumentParser(description='Track an object')
@@ -152,7 +152,7 @@ def main():
             cv2.imshow('color', color_image)
             cv2.imshow('gray', gray_image)
             cv2.imwrite(os.path.join(output_dir, str(idx)+'.png'), color_image)
-            cv2.imwrite(os.path.join(output_dir, str(idx)+'d.png'), depth_image)
+            #cv2.imwrite(os.path.join(output_dir, str(idx)+'d.png'), depth_image)
             key = cv2.waitKey(1)
 
             print('elapsed time for frame: ', datetime.now() - timestamp)
