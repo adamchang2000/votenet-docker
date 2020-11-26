@@ -77,11 +77,11 @@ def main():
 	print('pointcloud points: ', pcld.get_max_bound(), pcld.get_min_bound())
 
 	#x - right, y - down, z - away from camera
-	xyz = np.array([-0.01, 0.06, 0.52])
+	xyz = np.array([0, -0.04, 0.49])
 	#first: -pi, pi
 	#second: -pi/2, pi/2
 	#third: -pi, pi
-	rotate = [-3.,  -0.8, 1.5]
+	rotate = (-3.141592653589793, -0.7853981633974483, -3.141592653589793)
 	extent = np.array([0.08954177, 0.125, 0.14596413])
 	scale = 1.
 
@@ -89,7 +89,7 @@ def main():
 	bb.extent = extent
 	bb.scale(scale)
 
-	happy = False
+	happy = True
 
 	if happy:
 		bb.rotate(eulerAnglesToRotationMatrix(rotate))
@@ -113,7 +113,6 @@ def main():
 
 						bb.rotate(np.linalg.inv(eulerAnglesToRotationMatrix(test_rot)))
 
-						
 		else:
 			bb.rotate(eulerAnglesToRotationMatrix(rotate))
 			o3d.visualization.draw_geometries([pcld, bb])

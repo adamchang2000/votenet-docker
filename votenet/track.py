@@ -13,8 +13,8 @@ NUM_POINTS_NETWORK = 100000
 
 def main():
     parser = argparse.ArgumentParser(description='Track an object')
-    parser.add_argument('--model_path', action="store", help="Path of model to track")
-    parser.add_argument('--network_path', action="store", help="Path of network state dict")
+    parser.add_argument('--model_path', action="store", default='test.py', help="Path of model to track")
+    parser.add_argument('--network_path', action="store", default='test.py', help="Path of network state dict")
     args = parser.parse_args()
 
     if not args.model_path or not os.path.exists(args.model_path):
@@ -48,7 +48,7 @@ def main():
 
     # We will be removing the background of objects more than
     #  clipping_distance_in_meters meters away
-    clipping_distance_in_meters = 2
+    clipping_distance_in_meters = 3
     clipping_distance = clipping_distance_in_meters / depth_scale
 
     # Create an align object
@@ -58,6 +58,7 @@ def main():
     align = rs.align(align_to)
 
     idx = 0
+    scale_output_pcld = 1.0
 
     output_dir = 'output/'
 
@@ -107,19 +108,26 @@ def main():
 
             depth_image_flatten = depth_image.flatten()
 
+            #color_image_flatten = color_image_flatten[depth_image_flatten < clipping_distance]
+
+            print(depth_image_flatten)
+
             gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
             #gray_image = adaptive_threshold_3d_surface(gray_image, depth_image)
-            gray_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 51, 10)
+            #gray_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 51, 10)
+            gray_image = adaptive_threshold_3d_surface(gray_image, depth_image)
             gray_image_flatten = gray_image.flatten()
             gray_image_flatten = gray_image_flatten.reshape((gray_image_flatten.shape[0], 1))
 
             #print(pcld.shape)
             #print(gray_image_flatten.shape)
 
+            pcld *= scale_output_pcld
+
             #xyzrgb
             pcld_input = np.hstack((pcld, gray_image_flatten))
             #get rid of bad depth measurements
-            pcld_input = pcld_input[depth_image_flatten > 0].astype(np.float32)
+            pcld_input = pcld_input[abs(depth_image_flatten - clipping_distance / 2) < clipping_distance / 2].astype(np.float32)
             print('non-zero depth points ', pcld_input.shape)
 
 
