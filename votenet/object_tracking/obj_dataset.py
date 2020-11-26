@@ -45,8 +45,7 @@ class OBJDetectionVotesDataset(Dataset):
         #assert(num_points<=100000)
 
         assert(os.path.isdir(model_path))
-        assert(os.path.exists(os.path.join(model_path, 'train_samples.npz')))
-        assert(os.path.exists(os.path.join(model_path, 'test_samples.npz')))
+        assert(os.path.exists(os.path.join(model_path, split_set + '_samples.npz')))
 
         self.model_path = model_path
         self.samples = np.load(os.path.join(model_path, split_set + '_samples.npz'))['samples']
@@ -298,8 +297,8 @@ def get_sem_cls_statistics():
 
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
-    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=True)
-    sample = d[10]
+    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=True, split_set='val')
+    sample = d[2]
     #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
