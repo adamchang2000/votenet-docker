@@ -12,7 +12,7 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import pc_util
 
-DUMP_CONF_THRESH = 0.8 # Dump boxes with obj prob larger than that.
+DUMP_CONF_THRESH = 0.9 # Dump boxes with obj prob larger than that.
 
 def softmax(x):
     ''' Numpy function for softmax'''
@@ -99,6 +99,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
                 obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
                 pc_util.write_oriented_bbox_6dof(obbs[objectness_prob>DUMP_CONF_THRESH,:], os.path.join(dump_dir, '%06d_pred_confident_bbox.ply'%(idx_beg+i)))
                 pc_util.write_oriented_bbox_6dof(obbs[np.logical_and(objectness_prob>DUMP_CONF_THRESH, pred_mask[i,:]==1),:], os.path.join(dump_dir, '%06d_pred_confident_nms_bbox.ply'%(idx_beg+i)))
+                pc_util.write_oriented_bbox_6dof(obbs[np.logical_and(objectness_prob==np.max(objectness_prob), pred_mask[i,:]==1),:], os.path.join(dump_dir, '%06d_pred_SUPER_confident_nms_bbox.ply'%(idx_beg+i)))
                 pc_util.write_oriented_bbox_6dof(obbs[pred_mask[i,:]==1,:], os.path.join(dump_dir, '%06d_pred_nms_bbox.ply'%(idx_beg+i)))
                 pc_util.write_oriented_bbox_6dof(obbs, os.path.join(dump_dir, '%06d_pred_bbox.ply'%(idx_beg+i)))
             else:
