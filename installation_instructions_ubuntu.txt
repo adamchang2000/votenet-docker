@@ -1,3 +1,5 @@
+sudo su
+
 git clone https://github.com/adamchang2000/votenet-docker
 sudo apt-get -y install libffi-dev libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev zlib1g-dev
 sudo wget https://www.python.org/ftp/python/3.7.8/Python-3.7.8.tgz
@@ -7,7 +9,7 @@ sudo ./configure --enable-optimizations
 sudo make altinstall
 
 cd ~/votenet-docker/package
-pip3.7 install -r requirements.txt
+sudo pip3.7 install -r requirements.txt
 
 cd ~/votenet-docker/votenet/pointnet2
 sudo python3.7 setup.py install

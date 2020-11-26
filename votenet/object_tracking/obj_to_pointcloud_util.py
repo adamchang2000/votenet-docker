@@ -181,7 +181,7 @@ def get_perspective_data_from_model(model, xyz, euler_angles, points=20000, samp
 	factor = 5
 	while True:
 		pointcloud = sample_points(model, points * factor, sample_strategy)
-		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 10000)
+		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 50)
 
 		if len(lst) < points:
 			factor += 2

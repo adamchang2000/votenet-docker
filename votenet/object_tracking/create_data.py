@@ -4,15 +4,16 @@ import open3d as o3d
 from obj_to_pointcloud_util import *
 
 def main():
-	model_path = 'medical/new_textured_medical_patterns.ply'
+	model_path = 'medical/textured_medical_patterns_filledin.ply'
+	#model_path = 'medical/medical_textured.obj'
 	output_path = 'model_data/'
-	scene_path = 'scenes_2/'
+	scene_path = 'scenes/'
 	number_of_samples = 100
 	training_number = 80
 	testing_number = 20
 	val_number = 0
-	num_points = 4000
-	scale_output_pcld = 0.3
+	num_points = 3000
+	scale_output_pcld = 1.0
 	scale = 0.001 * scale_output_pcld
 	
 
@@ -25,26 +26,28 @@ def main():
 
 	model = convert_file_to_model(model_path, scale)
 	# print(model.get_max_bound())
-	# print(model.get_min_bound())
+	# # print(model.get_min_bound())
 	#o3d.visualization.draw_geometries([model])
+	if np.unique(np.array(model.colors)).shape[0] != 2:
+		print('WARNING, COLORS ARE NOT BINARY')
+	print(np.unique(np.array(model.colors)))
+	# exit()
 
 	scenes = []
-	for i in range(52):
+	for i in range(27):
 		scenes.append(o3d.io.read_point_cloud(os.path.join(scene_path, str(i) + '.ply')))
 
 	for i in range(number_of_samples):
 
-		if i % 50 == 1:
+		if i % 50 == 0:
 			print('creating sample ', i, end='\r')
 
-		scene_index = np.random.randint(52)
+		scene_index = np.random.randint(27)
 		scene = scenes[scene_index]
 
 		scene_pts = np.array(scene.points) * scale_output_pcld
 
 		pcld, bb, votes, euler_angles = get_perspective_data_from_model_seed(i, model, points=num_points, center = scene_pts[np.random.randint(scene_pts.shape[0])], scene_scale = scale_output_pcld)
-
-		#o3d.visualization.draw_geometries([pcld, bb])
 
 		box3d_centers = np.asarray([bb.get_center()])
 		box3d_sizes = np.asarray([bb.get_max_bound() - bb.get_min_bound()])
@@ -56,13 +59,11 @@ def main():
 		combined_colors = np.vstack((colors, np.array(scene.colors)))
 
 		pcld_out = o3d.geometry.PointCloud()
-		pcld_out.points = o3d.utility.Vector3dVector(combined_points)
+		pcld_out.points = o3d.utility.Vector3dVector(points)
 		#pcld_out.colors = o3d.utility.Vector3dVector(colors)
 		
 		#o3d.visualization.draw_geometries([pcld_out, bb])
 		#o3d.io.write_point_cloud(str(i) + '.ply', pcld_out)
-
-		#exit()
 
 		total_votes = np.zeros((combined_points.shape[0], 3))
 		total_votes[:votes.shape[0]] = votes

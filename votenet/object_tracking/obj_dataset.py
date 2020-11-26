@@ -36,8 +36,8 @@ from model_util_obj import OBJDatasetConfig
 
 DC = OBJDatasetConfig() # dataset specific config
 MAX_NUM_OBJ = 1 # maximum number of objects allowed per scene
-MEAN_COLOR_RGB = np.array([0.5,0.5,0.5]) # sunrgbd color is in 0~1
-MEAN_EXTRA_CHANNELS = np.array([0.5])
+MEAN_COLOR_RGB = np.array([0.,0.,0.]) # sunrgbd color is in 0~1
+MEAN_EXTRA_CHANNELS = np.array([0.])
 
 class OBJDetectionVotesDataset(Dataset):
     def __init__(self, model_path, split_set='train', num_points=25000, use_color=False, extra_channels=0, augment=True, dropout_rate=0.2):
@@ -107,6 +107,9 @@ class OBJDetectionVotesDataset(Dataset):
             point_cloud = point_cloud[:,0:6 + self.extra_channels]
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_COLOR_RGB)
             point_cloud[:,6:] = (point_cloud[:,6:]-MEAN_EXTRA_CHANNELS)
+        elif self.use_color:
+            point_cloud = point_cloud[:,0:6]
+            point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_COLOR_RGB)
         elif self.extra_channels > 0:
             point_cloud = point_cloud[:,0:3 + self.extra_channels]
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_EXTRA_CHANNELS)
@@ -122,16 +125,34 @@ class OBJDetectionVotesDataset(Dataset):
             votes = votes[index]
             vote_mask = vote_mask[index]
 
-        #if self.augment:
+        if self.augment:
             #randomly scale by +/-15%
-            #scale_ratio = np.random.random()*0.3+0.85
-            #scale_ratio = np.expand_dims(np.tile(scale_ratio,3),0)
-            #point_cloud[:,0:3] *= scale_ratio
-            #box3d_centers *= scale_ratio
-            #box3d_sizes *= scale_ratio
-            #votes *= scale_ratio
+            scale_ratio = np.random.random()*0.3+0.85
+            scale_ratio = np.expand_dims(np.tile(scale_ratio,3),0)
+            point_cloud[:,0:3] *= scale_ratio
+            box3d_centers *= scale_ratio
+            box3d_sizes *= scale_ratio
+            votes *= scale_ratio
 
-            #random dropout, drop self.dropout_rate
+            #adding noise to color channels
+            color_noise_std = 0.1
+            color_channel_noise_std = 0.02
+
+            #add noise to binary channels, extra_channels
+            noise_ratio = 0.1 #5% point of points, flip colors
+            index = np.random.choice(point_cloud.shape[0], int(n * noise_ratio), replace=False)
+
+            if self.use_color and self.extra_channels > 0:
+                point_cloud[:,3:] += np.random.normal(0, color_noise_std) #global illumination change
+                point_cloud[:,3:] = np.random.normal(point_cloud[:,3:], color_channel_noise_std) #changing every value, smaller std
+                point_cloud[:,6:][index] = 1. - point_cloud[:,6:][index] #flip binary bits
+            elif self.use_color:
+                point_cloud[:,3:] += np.random.normal(0, color_noise_std) #global illumination change
+                point_cloud[:,3:] = np.random.normal(point_cloud[:,3:], color_channel_noise_std) #changing every value, smaller std
+            elif self.extra_channels > 0:
+                point_cloud[:,3:][index] = 1. - point_cloud[:,3:][index] #flip binary bits
+
+            
             
 
         # ------------------------------- LABELS ------------------------------
@@ -277,8 +298,8 @@ def get_sem_cls_statistics():
 
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
-    d = OBJDetectionVotesDataset(sys.argv[1], num_points=25000, extra_channels=1, augment=True)
-    sample = d[15]
+    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=True)
+    sample = d[10]
     #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
