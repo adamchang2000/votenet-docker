@@ -125,20 +125,19 @@ class OBJDetectionVotesDataset(Dataset):
             vote_mask = vote_mask[index]
 
         if self.augment:
-            #randomly scale by +/-15%
-            scale_ratio = np.random.random()*0.3+0.85
-            scale_ratio = np.expand_dims(np.tile(scale_ratio,3),0)
-            point_cloud[:,0:3] *= scale_ratio
-            box3d_centers *= scale_ratio
-            box3d_sizes *= scale_ratio
-            votes *= scale_ratio
+            #randomly perturb each point by normal dist, std = 0.5cm
+            perturb = np.random.normal(0, 0.005, size=(point_cloud.shape[0], 3))
+            point_cloud[:,0:3] += perturb
+
+            #vote = center - point, vote = center - (point + perturb)
+            votes -= perturb
 
             #adding noise to color channels
             color_noise_std = 0.1
             color_channel_noise_std = 0.02
 
             #add noise to binary channels, extra_channels
-            noise_ratio = 0.1 #5% point of points, flip colors
+            noise_ratio = 0.2 #20% point of points, flip colors
             index = np.random.choice(point_cloud.shape[0], int(n * noise_ratio), replace=False)
 
             if self.use_color and self.extra_channels > 0:
@@ -297,7 +296,7 @@ def get_sem_cls_statistics():
 
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
-    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=True, split_set='val')
+    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=True, split_set='train')
     sample = d[2]
     #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
