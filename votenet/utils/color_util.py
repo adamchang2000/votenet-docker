@@ -5,6 +5,8 @@ import numpy as np
 import inspect
 from skimage.color import rgb2hsv
 
+from datetime import datetime
+
 def color2grayscale(image):
 	return np.dot(image, [0.2989, 0.5870, 0.1140])
 
@@ -104,16 +106,36 @@ def rgb2hsv(rgb):
 	return hsv
 
 
+#runs adaptive threshold on an image, taking into account surfaces using depth image
+def adaptive_threshold_3d_surface(grayscale, depth, kernel_size = 81):
+	assert(grayscale.shape == depth.shape)
+
+	#print(grayscale.shape)
+
+	timestamp = datetime.now()
+
+	thresh_image = cv2.adaptiveThreshold(grayscale, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, kernel_size, 13)
+	contours, hierarchy = cv2.findContours(thresh_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) 
+
+	cv2.drawContours(grayscale, contours, -1, (255, 255, 255), 3) 
+
+	cv2.imshow('test_contours', grayscale)
+
+	return thresh_image
+
 def main():
-	test_image = np.array(cv2.imread(r'C:\Users\adam2\Desktop\votenet-docker\votenet\4.png')) / 255.
-	sobel_filter_2d(test_image)
+	test_color = cv2.imread(r'C:\Users\adam2\Desktop\votenet-docker\votenet\6.png')
+	test_depth = np.array(cv2.imread(r'C:\Users\adam2\Desktop\votenet-docker\votenet\6d.png', cv2.IMREAD_UNCHANGED))
+	test_gray = cv2.cvtColor(test_color, cv2.COLOR_BGR2GRAY)
+	adaptive_threshold_3d_surface(test_gray, test_depth)
+	#sobel_filter_2d(test_image)
 
 	#mesh = o3d.io.read_triangle_mesh(r'C:\Users\adam2\Desktop\votenet-docker\votenet\object_tracking\test.ply')
 	#sobel_filter_3d_mesh(mesh)
 
-	image = rgb2hsv(test_image)
-	cv2.imshow('test', image)
-	cv2.waitKey(0)
+	#image = rgb2hsv(test_image)
+	#cv2.imshow('test', image)
+	#cv2.waitKey(0)
 
 
 if __name__ == "__main__":
