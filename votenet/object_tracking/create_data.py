@@ -7,7 +7,7 @@ def main():
 	model_path = 'medical/textured_medical_patterns_filledin.ply'
 	#model_path = 'medical/medical_textured.obj'
 	output_path = 'model_data/'
-	scene_path = 'scenes/'
+	scene_path = 'scenes_whole_house/'
 	number_of_samples = 100
 	training_number = 80
 	testing_number = 20
@@ -34,7 +34,7 @@ def main():
 	# exit()
 
 	scenes = []
-	for i in range(27):
+	for i in range(109):
 		scenes.append(o3d.io.read_point_cloud(os.path.join(scene_path, str(i) + '.ply')))
 
 	for i in range(number_of_samples):
@@ -42,7 +42,7 @@ def main():
 		if i % 50 == 0:
 			print('creating sample ', i, end='\r')
 
-		scene_index = np.random.randint(27)
+		scene_index = np.random.randint(109)
 		scene = scenes[scene_index]
 
 		scene_pts = np.array(scene.points) * scale_output_pcld
