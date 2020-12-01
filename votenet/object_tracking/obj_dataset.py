@@ -137,7 +137,7 @@ class OBJDetectionVotesDataset(Dataset):
             color_channel_noise_std = 0.02
 
             #add noise to binary channels, extra_channels
-            noise_ratio = 0.2 #20% point of points, flip colors
+            noise_ratio = 0.1 #20% point of points, flip colors
             index = np.random.choice(point_cloud.shape[0], int(n * noise_ratio), replace=False)
 
             if self.use_color and self.extra_channels > 0:

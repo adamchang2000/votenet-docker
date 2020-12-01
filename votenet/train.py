@@ -234,7 +234,7 @@ bnm_scheduler = BNMomentumScheduler(net, bn_lambda=bn_lbmd, last_epoch=start_epo
 
 #LR_DECAY_RATE = FLAGS.lr_decay
 #set decay rate such that at epoch 10, lr = 1/2
-LR_DECAY_RATE = 1 / (10 * len(TRAIN_DATALOADER))
+LR_DECAY_RATE = 0.001
 def get_current_lr(iter_count):
     lr = BASE_LEARNING_RATE * 1 / (1 + LR_DECAY_RATE * iter_count)
     return lr
