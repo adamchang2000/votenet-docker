@@ -232,9 +232,9 @@ BN_MOMENTUM_MAX = 0.001
 bn_lbmd = lambda it: max(BN_MOMENTUM_INIT * BN_DECAY_RATE**(int(it / BN_DECAY_STEP)), BN_MOMENTUM_MAX)
 bnm_scheduler = BNMomentumScheduler(net, bn_lambda=bn_lbmd, last_epoch=start_epoch-1)
 
-#LR_DECAY_RATE = FLAGS.lr_decay
+LR_DECAY_RATE = FLAGS.lr_decay
 #set decay rate such that at epoch 10, lr = 1/2
-LR_DECAY_RATE = 0.001
+#LR_DECAY_RATE = 0.001
 def get_current_lr(iter_count):
     lr = BASE_LEARNING_RATE * 1 / (1 + LR_DECAY_RATE * iter_count)
     return lr
