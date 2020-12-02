@@ -144,6 +144,8 @@ def parse_predictions(end_points, config_dict):
             pred_mask[i, nonempty_box_inds[pick]] = 1
         end_points['pred_mask'] = pred_mask
         # ---------- NMS output: pred_mask in (B,K) -----------
+
+
     elif config_dict['use_3d_nms'] and (not config_dict['cls_nms']):
         # ---------- NMS input: pred_with_prob in (B,K,7) -----------
         pred_mask = np.zeros((bsize, K))
@@ -163,6 +165,8 @@ def parse_predictions(end_points, config_dict):
             assert(len(pick)>0)
             pred_mask[i, nonempty_box_inds[pick]] = 1
         end_points['pred_mask'] = pred_mask
+
+
         # ---------- NMS output: pred_mask in (B,K) -----------
     elif config_dict['use_3d_nms'] and config_dict['cls_nms']:
         # ---------- NMS input: pred_with_prob in (B,K,8) -----------

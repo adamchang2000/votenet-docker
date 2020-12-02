@@ -32,7 +32,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
         None
     '''
 
-    print('dump results called')
+    print('dump results called with idx_beg %d' % idx_beg)
 
     if not os.path.exists(dump_dir):
         os.system('mkdir %s'%(dump_dir))
