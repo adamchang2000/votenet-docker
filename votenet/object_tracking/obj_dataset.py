@@ -125,8 +125,8 @@ class OBJDetectionVotesDataset(Dataset):
             vote_mask = vote_mask[index]
 
         if self.augment:
-            #randomly perturb each point by normal dist, std = 0.5cm
-            perturb = np.random.normal(0, 0.005, size=(point_cloud.shape[0], 3))
+            #randomly perturb each point by normal dist, std = 0.1cm
+            perturb = np.random.normal(0, 0.001, size=(point_cloud.shape[0], 3))
             point_cloud[:,0:3] += perturb
 
             #vote = center - point, vote = center - (point + perturb)
