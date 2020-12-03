@@ -32,17 +32,6 @@ class Pointnet2Backbone(nn.Module):
     def __init__(self, input_feature_dim=0):
         super().__init__()
 
-
-        #more layers to account for smaller objects
-        self.sa0 = PointnetSAModuleVotes(
-                npoint=4096,
-                radius=0.02,
-                nsample=64,
-                mlp=[input_feature_dim, 128, 128, 256],
-                use_xyz=True,
-                normalize_xyz=True
-            )
-
         self.sa1 = PointnetSAModuleVotes(
                 npoint=2048,
                 radius=0.05,
@@ -125,12 +114,7 @@ class Pointnet2Backbone(nn.Module):
 
         xyz, features = self._break_up_pc(pointcloud)
 
-        # --------- 6 SET ABSTRACTION LAYERS ---------
-
-        xyz, features, fps_inds = self.sa0(xyz, features)
-        end_points['sa0_inds'] = fps_inds
-        end_points['sa0_xyz'] = xyz
-        end_points['sa0_features'] = features
+        # --------- 5 SET ABSTRACTION LAYERS ---------
 
         xyz, features, fps_inds = self.sa1(xyz, features)
         end_points['sa1_inds'] = fps_inds
