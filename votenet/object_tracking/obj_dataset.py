@@ -40,7 +40,7 @@ MEAN_COLOR_RGB = np.array([0.,0.,0.]) # sunrgbd color is in 0~1
 MEAN_EXTRA_CHANNELS = np.array([0.])
 
 class OBJDetectionVotesDataset(Dataset):
-    def __init__(self, model_path, split_set='train', num_points=25000, use_color=False, extra_channels=0, augment=True, dropout_rate=0.2):
+    def __init__(self, model_path, split_set='train', num_points=25000, use_color=False, extra_channels=0, augment=True):
 
         #assert(num_points<=100000)
 
@@ -57,7 +57,6 @@ class OBJDetectionVotesDataset(Dataset):
         assert(extra_channels == MEAN_EXTRA_CHANNELS.shape[0])
         
         self.augment = augment
-        self.dropout_rate = dropout_rate
        
     def __len__(self):
         return len(self.samples)
