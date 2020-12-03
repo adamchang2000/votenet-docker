@@ -36,7 +36,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=2048,
                 radius=0.05,
                 nsample=64,
-                mlp=[256, 256, 256, 512],
+                mlp=[input_feature_dim, 256, 256, 512],
                 use_xyz=True,
                 normalize_xyz=True
             )
