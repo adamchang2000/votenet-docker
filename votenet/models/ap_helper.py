@@ -74,10 +74,10 @@ def parse_predictions(end_points, config_dict):
         pred_heading_class3.unsqueeze(-1)) # B,num_proposal,1
     pred_heading_residual3.squeeze_(2)
 
-    pred_size_class = torch.argmax(end_points['size_scores'], -1) # B,num_proposal
-    pred_size_residual = torch.gather(end_points['size_residuals'], 2,
-        pred_size_class.unsqueeze(-1).unsqueeze(-1).repeat(1,1,1,3)) # B,num_proposal,1,3
-    pred_size_residual.squeeze_(2)
+    # pred_size_class = torch.argmax(end_points['size_scores'], -1) # B,num_proposal
+    # pred_size_residual = torch.gather(end_points['size_residuals'], 2,
+    #     pred_size_class.unsqueeze(-1).unsqueeze(-1).repeat(1,1,1,3)) # B,num_proposal,1,3
+    # pred_size_residual.squeeze_(2)
     pred_sem_cls = torch.argmax(end_points['sem_cls_scores'], -1) # B,num_proposal
     sem_cls_probs = softmax(end_points['sem_cls_scores'].detach().cpu().numpy()) # B,num_proposal,10
     pred_sem_cls_prob = np.max(sem_cls_probs,-1) # B,num_proposal
@@ -99,8 +99,7 @@ def parse_predictions(end_points, config_dict):
             heading_angle3 = config_dict['dataset_config'].class2angle(\
                 pred_heading_class3[i,j].detach().cpu().numpy(), pred_heading_residual3[i,j].detach().cpu().numpy())
 
-            box_size = config_dict['dataset_config'].class2size(\
-                int(pred_size_class[i,j].detach().cpu().numpy()), pred_size_residual[i,j].detach().cpu().numpy())
+            box_size = config_dict['dataset_config'].meanSize(0)
             corners_3d_upright_camera = get_3d_box(box_size, heading_angle, heading_angle2, heading_angle3, pred_center_upright_camera[i,j,:])
             pred_corners_3d_upright_camera[i,j] = corners_3d_upright_camera
 
@@ -229,8 +228,8 @@ def parse_groundtruths(end_points, config_dict):
     heading_residual_label2 = end_points['heading_residual_label2']
     heading_class_label3 = end_points['heading_class_label3']
     heading_residual_label3 = end_points['heading_residual_label3']
-    size_class_label = end_points['size_class_label']
-    size_residual_label = end_points['size_residual_label']
+    # size_class_label = end_points['size_class_label']
+    # size_residual_label = end_points['size_residual_label']
     box_label_mask = end_points['box_label_mask']
     sem_cls_label = end_points['sem_cls_label']
     bsize = center_label.shape[0]
@@ -244,7 +243,7 @@ def parse_groundtruths(end_points, config_dict):
             heading_angle = config_dict['dataset_config'].class2angle(heading_class_label[i,j].detach().cpu().numpy(), heading_residual_label[i,j].detach().cpu().numpy())
             heading_angle2 = config_dict['dataset_config'].class2angle(heading_class_label2[i,j].detach().cpu().numpy(), heading_residual_label2[i,j].detach().cpu().numpy())
             heading_angle3 = config_dict['dataset_config'].class2angle(heading_class_label3[i,j].detach().cpu().numpy(), heading_residual_label3[i,j].detach().cpu().numpy())
-            box_size = config_dict['dataset_config'].class2size(int(size_class_label[i,j].detach().cpu().numpy()), size_residual_label[i,j].detach().cpu().numpy())
+            box_size = config_dict['dataset_config'].meanSize(0)
             corners_3d_upright_camera = get_3d_box(box_size, heading_angle, heading_angle2, heading_angle3, gt_center_upright_camera[i,j,:])
             gt_corners_3d_upright_camera[i,j] = corners_3d_upright_camera
 

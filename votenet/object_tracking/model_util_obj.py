@@ -19,7 +19,7 @@ class OBJDatasetConfig(object):
 
         self.type2class={'medical': 0}
         self.class2type = {self.type2class[t]:t for t in self.type2class}
-        self.type_mean_size = {'medical': np.array([0.08954177, 0.125, 0.14596413])}
+        self.type_mean_size = {'medical': np.array([0.08951334, 0.125, 0.14595903])}
 
         self.mean_size_arr = np.zeros((self.num_size_cluster, 3))
         for i in range(self.num_size_cluster):
@@ -31,6 +31,9 @@ class OBJDatasetConfig(object):
         size_residual = size - self.type_mean_size[type_name]
         return size_class, size_residual
     
+    def meanSize(self, pred_cls):
+        return self.type_mean_size[self.class2type[pred_cls]]
+
     def class2size(self, pred_cls, residual):
         ''' Inverse function to size2class '''
         mean_size = self.type_mean_size[self.class2type[pred_cls]]
@@ -70,7 +73,7 @@ class OBJDatasetConfig(object):
         #print(heading_classes_and_residuals)
         #print(heading_angle)
 
-        box_size = self.class2size(int(size_class), size_residual)
+        box_size = self.meanSize(int(size_class))
         obb = np.zeros((9,))
         obb[0:3] = center
         obb[3:6] = box_size

@@ -115,9 +115,9 @@ def adaptive_threshold_3d_surface(grayscale, depth, kernel_size = 81):
 	timestamp = datetime.now()
 
 	thresh_image = cv2.adaptiveThreshold(grayscale, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, kernel_size, 13)
-	contours, hierarchy = cv2.findContours(thresh_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) 
+	#contours, hierarchy = cv2.findContours(thresh_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) 
 
-	cv2.drawContours(grayscale, contours, -1, (255, 255, 255), 3) 
+	#cv2.drawContours(grayscale, contours, -1, (255, 255, 255), 3) 
 
 	cv2.imshow('test_contours', grayscale)
 

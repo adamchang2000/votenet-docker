@@ -9,7 +9,7 @@ import cv2
 #logging.basicConfig(format=format, level=logging.DEBUG)
 
 # Calculates Rotation Matrix given euler angles.
-def eulerAnglesToRotationMatrix(theta) :
+def eulerAnglesToRotationMatrix(theta):
     
     R_x = np.array([[1,         0,                  0                   ],
                     [0,         math.cos(theta[0]), -math.sin(theta[0]) ],

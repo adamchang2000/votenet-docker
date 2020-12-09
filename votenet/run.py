@@ -21,12 +21,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
 sys.path.append(os.path.join(ROOT_DIR, 'models'))
 from ap_helper import parse_predictions
+from ap_helper import softmax
 
 
-net = 0
-CONFIG_DICT = {}
-DATASET_CONFIG = {}
-MODEL = 0
+# net = 0
+# CONFIG_DICT = {}
+# DATASET_CONFIG = {}
+# MODEL = 0
 
 
 def setup(checkpoint_path):
@@ -102,6 +103,58 @@ def setup(checkpoint_path):
         'conf_thresh': conf_thresh, 'dataset_config':DATASET_CONFIG}
     # ------------------------------------------------------------------------- GLOBAL CONFIG END
 
+def extract_best_pred(end_points, config):
+
+    OUTPUT_THRESH = 0.95
+
+
+    # NETWORK OUTPUTS
+    seed_xyz = end_points['seed_xyz'].detach().cpu().numpy() # (B,num_seed,3)
+    if 'vote_xyz' in end_points:
+        aggregated_vote_xyz = end_points['aggregated_vote_xyz'].detach().cpu().numpy()
+        vote_xyz = end_points['vote_xyz'].detach().cpu().numpy() # (B,num_seed,3)
+        aggregated_vote_xyz = end_points['aggregated_vote_xyz'].detach().cpu().numpy()
+    objectness_scores = end_points['objectness_scores'].detach().cpu().numpy() # (B,K,2)
+    pred_center = end_points['center'].detach().cpu().numpy() # (B,K,3)
+    pred_heading_class = torch.argmax(end_points['heading_scores'], -1) # B,num_proposal
+    pred_heading_residual = torch.gather(end_points['heading_residuals'], 2, pred_heading_class.unsqueeze(-1)) # B,num_proposal,1
+    pred_heading_class = pred_heading_class.detach().cpu().numpy() # B,num_proposal
+    pred_heading_residual = pred_heading_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal
+
+    pred_heading_class2 = torch.argmax(end_points['heading_scores2'], -1) # B,num_proposal
+    pred_heading_residual2 = torch.gather(end_points['heading_residuals2'], 2, pred_heading_class2.unsqueeze(-1)) # B,num_proposal,1
+    pred_heading_class2 = pred_heading_class2.detach().cpu().numpy() # B,num_proposal
+    pred_heading_residual2 = pred_heading_residual2.squeeze(2).detach().cpu().numpy() # B,num_proposal
+
+    pred_heading_class3 = torch.argmax(end_points['heading_scores3'], -1) # B,num_proposal
+    pred_heading_residual3 = torch.gather(end_points['heading_residuals3'], 2, pred_heading_class3.unsqueeze(-1)) # B,num_proposal,1
+    pred_heading_class3 = pred_heading_class3.detach().cpu().numpy() # B,num_proposal
+    pred_heading_residual3 = pred_heading_residual3.squeeze(2).detach().cpu().numpy() # B,num_proposal
+
+    pred_size_class = torch.argmax(end_points['size_scores'], -1) # B,num_proposal
+    pred_size_residual = torch.gather(end_points['size_residuals'], 2, pred_size_class.unsqueeze(-1).unsqueeze(-1).repeat(1,1,1,3)) # B,num_proposal,1,3
+    pred_size_residual = pred_size_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal,3
+    pred_size_class = pred_size_class.detach().cpu().numpy() # B,num_proposal
+
+    # OTHERS
+    pred_mask = end_points['pred_mask'] # B,num_proposal
+    objectness_prob = softmax(objectness_scores[0,:,:])[:,1] # (K,)
+
+    if np.sum(objectness_prob>OUTPUT_THRESH)>0:
+        num_proposal = pred_center.shape[1]
+        obbs = []
+        for j in range(num_proposal):
+            obb = (pred_center[0,j,0:3], [config.class2angle(pred_heading_class[0,j], pred_heading_residual[0,j]), config.class2angle(pred_heading_class2[0,j], pred_heading_residual2[0,j]), 
+                config.class2angle(pred_heading_class3[0,j], pred_heading_residual3[0,j])],
+                            pred_size_class[0,j], pred_size_residual[0,j])
+            obbs.append(obb)
+        if len(obbs)>0:
+            obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
+            return obbs[np.logical_and(objectness_prob==np.max(objectness_prob), pred_mask[0,:]==1),:]
+        else:
+            print('warning, no obbs')
+
+    return False
 
 i = 0
 
@@ -125,6 +178,7 @@ def run_network(pointcloud):
 
     #this should return, [(class index, obb params, box confidence)]
     batch_pred_map_cls = parse_predictions(end_points, CONFIG_DICT) 
+    #print(batch_pred_map_cls)
 
     max_conf = -1
     max_pred = 0
@@ -135,14 +189,15 @@ def run_network(pointcloud):
 
         print('max conf ', max_conf)
 
-    try:
-        MODEL.dump_results(end_points, 'test_dump', DATASET_CONFIG, idx_beg = i)
-    except:
-        pass
+    # try:
+    #     MODEL.dump_results(end_points, 'test_dump', DATASET_CONFIG, idx_beg = i)
+    # except:
+    #     pass
 
     i += 10
 
-    return batch_pred_map_cls
+    best_bbox = extract_best_pred(end_points, DATASET_CONFIG)
+    return max_conf, best_bbox
 
 if __name__=='__main__':
 

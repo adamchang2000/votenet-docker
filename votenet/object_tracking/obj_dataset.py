@@ -136,7 +136,7 @@ class OBJDetectionVotesDataset(Dataset):
             color_channel_noise_std = 0.02
 
             #add noise to binary channels, extra_channels
-            noise_ratio = 0.1 #20% point of points, flip colors
+            noise_ratio = 0.05 #20% point of points, flip colors
             index = np.random.choice(point_cloud.shape[0], int(n * noise_ratio), replace=False)
 
             if self.use_color and self.extra_channels > 0:
@@ -180,7 +180,7 @@ class OBJDetectionVotesDataset(Dataset):
         #axis_angles = np.asarray([axis_angles])
         #angle_class_and_residuals = [DC.angle2class(angle)]
 
-        size_class, size_residual = DC.size2class(box3d_sizes[0], DC.class2type[0])
+        #size_class, size_residual = DC.size2class(box3d_sizes[0], DC.class2type[0])
 
         #print(angle_class_and_residuals)
 
@@ -203,8 +203,8 @@ class OBJDetectionVotesDataset(Dataset):
         #print(angle_classes2, angle_residuals2)
         #print(angle_classes3, angle_residuals3)
 
-        size_classes = np.asarray([size_class])
-        size_residuals = np.asarray([size_residual])
+        #size_classes = np.asarray([size_class])
+        #size_residuals = np.asarray([size_residual])
 
         #print(size_classes.shape)
         #print(size_residuals.shape)
@@ -224,8 +224,8 @@ class OBJDetectionVotesDataset(Dataset):
         ret_dict['heading_class_label3'] = angle_classes3.astype(np.int64)
         ret_dict['heading_residual_label3'] = angle_residuals3.astype(np.float32)
         #ret_dict['rotation_vector_label'] = axis_angles.astype(np.float32)
-        ret_dict['size_class_label'] = size_classes.astype(np.int64)
-        ret_dict['size_residual_label'] = size_residuals.astype(np.float32)
+        #ret_dict['size_class_label'] = size_classes.astype(np.int64)
+        #ret_dict['size_residual_label'] = size_residuals.astype(np.float32)
         ret_dict['sem_cls_label'] = semantic_class_index.astype(np.int64)
         ret_dict['box_label_mask'] = label_mask.astype(np.float32)
         ret_dict['vote_label'] = vote_labels.astype(np.float32)
@@ -296,7 +296,7 @@ def get_sem_cls_statistics():
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
     d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=True, split_set='train')
-    sample = d[2]
+    sample = d[3]
     #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
