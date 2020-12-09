@@ -260,7 +260,7 @@ def get_loss(end_points, config):
     #end_points['size_cls_loss'] = size_cls_loss
     #end_points['size_reg_loss'] = size_reg_loss
     end_points['sem_cls_loss'] = sem_cls_loss
-    box_loss = center_loss + 0.5*heading_cls_loss + heading_reg_loss
+    box_loss = center_loss + 0.1*heading_cls_loss + heading_reg_loss
     end_points['box_loss'] = box_loss
 
     # Final loss function
