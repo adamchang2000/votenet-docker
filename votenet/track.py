@@ -34,9 +34,9 @@ def perform_icp(box_points, pcld_input, model_pcld):
     print('inverted')
     print(init_transform)
 
-    pcld_input.estimate_normals()
+    #pcld_input.estimate_normals()
 
-    icp_result = o3d.registration.registration_colored_icp(pcld_input, model_pcld, max_correspondence_distance=max_correspondence_distance, init=init_transform)
+    #icp_result = o3d.registration.registration_colored_icp(pcld_input, model_pcld, max_correspondence_distance=max_correspondence_distance, init=init_transform)
 
     pcld_input.transform(init_transform)
 

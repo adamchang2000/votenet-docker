@@ -105,7 +105,7 @@ def setup(checkpoint_path):
 
 def extract_best_pred(end_points, config):
 
-    OUTPUT_THRESH = 0.95
+    OUTPUT_THRESH = 0.8
 
 
     # NETWORK OUTPUTS
@@ -131,11 +131,6 @@ def extract_best_pred(end_points, config):
     pred_heading_class3 = pred_heading_class3.detach().cpu().numpy() # B,num_proposal
     pred_heading_residual3 = pred_heading_residual3.squeeze(2).detach().cpu().numpy() # B,num_proposal
 
-    pred_size_class = torch.argmax(end_points['size_scores'], -1) # B,num_proposal
-    pred_size_residual = torch.gather(end_points['size_residuals'], 2, pred_size_class.unsqueeze(-1).unsqueeze(-1).repeat(1,1,1,3)) # B,num_proposal,1,3
-    pred_size_residual = pred_size_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal,3
-    pred_size_class = pred_size_class.detach().cpu().numpy() # B,num_proposal
-
     # OTHERS
     pred_mask = end_points['pred_mask'] # B,num_proposal
     objectness_prob = softmax(objectness_scores[0,:,:])[:,1] # (K,)
@@ -146,7 +141,7 @@ def extract_best_pred(end_points, config):
         for j in range(num_proposal):
             obb = (pred_center[0,j,0:3], [config.class2angle(pred_heading_class[0,j], pred_heading_residual[0,j]), config.class2angle(pred_heading_class2[0,j], pred_heading_residual2[0,j]), 
                 config.class2angle(pred_heading_class3[0,j], pred_heading_residual3[0,j])],
-                            pred_size_class[0,j], pred_size_residual[0,j])
+                            0)
             obbs.append(obb)
         if len(obbs)>0:
             obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
