@@ -341,7 +341,7 @@ def train_one_epoch():
                 if key not in stat_dict: stat_dict[key] = 0
                 stat_dict[key] += end_points[key].item()
 
-        batch_interval = 5
+        batch_interval = 10
         if (batch_idx+1) % batch_interval == 0:
             log_string(' ---- batch: %03d ----' % (batch_idx+1))
             TRAIN_VISUALIZER.log_scalars({key:stat_dict[key]/batch_interval for key in stat_dict},
@@ -418,7 +418,10 @@ def train(start_epoch):
         # REF: https://github.com/pytorch/pytorch/issues/5059
         np.random.seed()
         train_one_epoch()
-        if EPOCH_CNT == 0 or EPOCH_CNT % 10 == 9: # Eval every 10 epochs
+
+        #eval interval
+        eval_interval = 5
+        if EPOCH_CNT == 0 or EPOCH_CNT % eval_interval == eval_interval - 1:
             loss = evaluate_one_epoch()
         # Save checkpoint
         save_dict = {'epoch': epoch+1, # after training one epoch, the start_epoch should be epoch+1
