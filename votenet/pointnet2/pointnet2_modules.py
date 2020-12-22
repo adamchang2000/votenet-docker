@@ -168,12 +168,13 @@ class PointnetSAModuleVotes(nn.Module):
     def __init__(
             self,
             *,
-            mlp: List[int],
+            mlp: List[int], #mlp = [128, 128, 128, 256]
             npoint: int = None,
             radius: float = None,
             nsample: int = None,
             bn: bool = True,
             use_xyz: bool = True,
+            use_relative_xyz: bool = False,
             pooling: str = 'max',
             sigma: float = None, # for RBF pooling
             normalize_xyz: bool = False, # noramlize local XYZ with radius
@@ -193,16 +194,19 @@ class PointnetSAModuleVotes(nn.Module):
             self.sigma = self.radius/2
         self.normalize_xyz = normalize_xyz
         self.ret_unique_cnt = ret_unique_cnt
+        self.use_relative_xyz = use_relative_xyz
+
+        assert(not (use_relative_xyz and use_xyz))
 
         if npoint is not None:
             self.grouper = pointnet2_utils.QueryAndGroup(radius, nsample,
                 use_xyz=use_xyz, ret_grouped_xyz=True, normalize_xyz=normalize_xyz,
-                sample_uniformly=sample_uniformly, ret_unique_cnt=ret_unique_cnt)
+                sample_uniformly=sample_uniformly, ret_unique_cnt=ret_unique_cnt, use_relative_xyz=use_relative_xyz)
         else:
-            self.grouper = pointnet2_utils.GroupAll(use_xyz, ret_grouped_xyz=True)
+            self.grouper = pointnet2_utils.GroupAll(use_xyz, ret_grouped_xyz=True, use_relative_xyz=use_relative_xyz)
 
         mlp_spec = mlp
-        if use_xyz and len(mlp_spec)>0:
+        if (use_xyz or use_relative_xyz) and len(mlp_spec)>0:
             mlp_spec[0] += 3
         self.mlp_module = pt_utils.SharedMLP(mlp_spec, bn=bn)
 
