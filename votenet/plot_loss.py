@@ -20,6 +20,8 @@ def main():
 		for line in f:
 			if 'mean' not in line:
 				continue
+			if 'ratio' in line:
+				continue
 			if 'eval' in line:
 				z = re.match(re_eval, line)
 				lst = eval_data.get(z.groups()[0], [])
