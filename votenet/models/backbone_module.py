@@ -148,7 +148,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=2048,
                 radius=0.05,
                 nsample=64,
-                mlp=[input_feature_dim, 256, 256, 512],
+                mlp=[input_feature_dim, 64, 64, 128],
                 use_xyz=False,
                 normalize_xyz=False,
                 use_relative_xyz=True
@@ -158,7 +158,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=1024,
                 radius=0.1,
                 nsample=32,
-                mlp=[512, 256, 256, 512],
+                mlp=[128, 128, 128, 256],
                 use_xyz=False,
                 normalize_xyz=False,
                 use_relative_xyz=True
@@ -168,7 +168,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=512,
                 radius=0.25,
                 nsample=16,
-                mlp=[512, 256, 256, 512],
+                mlp=[256, 128, 128, 256],
                 use_xyz=False,
                 normalize_xyz=False,
                 use_relative_xyz=True
@@ -178,7 +178,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=256,
                 radius=0.5,
                 nsample=16,
-                mlp=[512, 256, 256, 512],
+                mlp=[256, 128, 128, 256],
                 use_xyz=False,
                 normalize_xyz=False,
                 use_relative_xyz=True
@@ -188,15 +188,15 @@ class Pointnet2Backbone(nn.Module):
                 npoint=256,
                 radius=1.25,
                 nsample=16,
-                mlp=[512, 256, 256, 512],
+                mlp=[256, 128, 128, 256],
                 use_xyz=False,
                 normalize_xyz=False,
                 use_relative_xyz=True
             )
 
-        self.fp1 = PointnetFPModule(mlp=[512+512,512,512])
-        self.fp2 = PointnetFPModule(mlp=[512+512,512,512])
-        self.fp3 = PointnetFPModule(mlp=[512+512,512,512]) 
+        self.fp1 = PointnetFPModule(mlp=[256+256,256,256])
+        self.fp2 = PointnetFPModule(mlp=[256+256,256,256])
+        self.fp3 = PointnetFPModule(mlp=[256+256,256,256]) 
 
     def _break_up_pc(self, pc):
         xyz = pc[..., 0:3].contiguous()

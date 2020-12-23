@@ -8,6 +8,8 @@ def main():
 		print('usage: python %s <log file location>' % sys.argv[0])
 
 	log_file = sys.argv[1]
+	eval_out = os.path.join(os.path.dirname(os.path.realpath(log_file)), 'Eval_losses.png')
+	train_out = os.path.join(os.path.dirname(os.path.realpath(log_file)), 'Train_losses.png')
 
 	assert(os.path.exists(log_file))
 
@@ -43,7 +45,7 @@ def main():
 		plt.plot(data, label=key)
 	plt.title('Eval losses')
 	plt.legend()
-	plt.savefig('Eval_losses.png')
+	plt.savefig(eval_out)
 	plt.close()
 
 	for key, val in train_data.items():
@@ -53,7 +55,7 @@ def main():
 		plt.plot(data, label=key)
 	plt.title('Train losses')
 	plt.legend()
-	plt.savefig('Train_losses.png')
+	plt.savefig(train_out)
 	plt.close()
 
 
