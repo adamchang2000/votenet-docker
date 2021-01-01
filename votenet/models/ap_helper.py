@@ -64,7 +64,7 @@ def parse_predictions(end_points, config_dict):
         pred_heading_class.unsqueeze(-1)) # B,num_proposal,1
     pred_heading_residual.squeeze_(2)
 
-    pred_rot_vec = end_points['rotation_vector']
+    pred_rot_vec = end_points['rotation_vector'].detach().cpu().numpy()
 
     # pred_heading_class2 = torch.argmax(end_points['heading_scores2'], -1) # B,num_proposal
     # pred_heading_residual2 = torch.gather(end_points['heading_residuals2'], 2,
