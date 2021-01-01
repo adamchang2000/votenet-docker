@@ -472,8 +472,13 @@ def write_oriented_bbox_6dof(scene_bbox, out_filename):
         lengths = box[3:6]
         trns = np.eye(4)
         trns[0:3, 3] = ctr
-        trns[3,3] = 1.0            
-        trns[0:3,0:3] = eulerangles2rotmat(box[6:9])
+        trns[3,3] = 1.0
+        
+        rotation_vector = box[6:9]
+        theta = box[9]
+        rotation_vector /= np.linalg.norm(rotation_vector)
+        rotation_vector *= theta
+        trns[0:3,0:3] = o3d.geometry.get_rotation_matrix_from_axis_angle(rotation_vector)
         box_trimesh_fmt = trimesh.creation.box(lengths, trns)
         return box_trimesh_fmt
 

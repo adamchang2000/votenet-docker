@@ -107,7 +107,7 @@ def compute_objectness_loss(end_points):
 
     return objectness_loss, objectness_label, objectness_mask, object_assignment
 
-def compute_rotation_loss(end_points, object_assignment, objectness_label, num_heading_bin, batch_size, n=3):
+def compute_rotation_loss(end_points, object_assignment, objectness_label, num_heading_bin, batch_size, n=1):
 
     lst = list(range(1, n+1))
     lst[0] = ''
@@ -144,8 +144,20 @@ def compute_rotation_loss(end_points, object_assignment, objectness_label, num_h
         else:
             heading_residual_normalized_loss += torch.sum(heading_residual_normalized_loss_temp*objectness_label)/(torch.sum(objectness_label)+1e-6)
 
+    # Compute rotation vector loss
+    pred_rotation_vector = end_points['rotation_vector']
+    gt_rotation_vector = end_points['rotation_vector_label'][:,:,0:3]
+    dist1, ind1, dist2, _ = nn_distance(pred_rotation_vector, gt_rotation_vector, l1smooth=True) # dist1: BxK, dist2: BxK2 #huber lossing it
+    box_label_mask = end_points['box_label_mask']
+    objectness_label = end_points['objectness_label'].float()
+    centroid_reg_loss1 = \
+        torch.sum(dist1*objectness_label)/(torch.sum(objectness_label)+1e-6)
+    # centroid_reg_loss2 = \
+    #     torch.sum(dist2*box_label_mask)/(torch.sum(box_label_mask)+1e-6)
+    rotation_vector_loss = centroid_reg_loss1# + centroid_reg_loss2
 
-    return heading_class_loss, heading_residual_normalized_loss
+
+    return heading_class_loss, heading_residual_normalized_loss, rotation_vector_loss
 
 def compute_box_and_sem_cls_loss(end_points, config):
     """ Compute 3D bounding box and semantic classification loss.
@@ -182,7 +194,7 @@ def compute_box_and_sem_cls_loss(end_points, config):
         torch.sum(dist2*box_label_mask)/(torch.sum(box_label_mask)+1e-6)
     center_loss = centroid_reg_loss1 + centroid_reg_loss2
 
-    heading_class_loss, heading_residual_normalized_loss = compute_rotation_loss(end_points, object_assignment, objectness_label, num_heading_bin, batch_size)
+    heading_class_loss, heading_residual_normalized_loss, rotation_vector_loss = compute_rotation_loss(end_points, object_assignment, objectness_label, num_heading_bin, batch_size)
 
     # Compute size loss
     #size_class_label = torch.gather(end_points['size_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
@@ -203,12 +215,12 @@ def compute_box_and_sem_cls_loss(end_points, config):
     #size_residual_normalized_loss = torch.sum(size_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
 
     # 3.4 Semantic cls loss
-    sem_cls_label = torch.gather(end_points['sem_cls_label'], 1, object_assignment) # select (B,K) from (B,K2)
-    criterion_sem_cls = nn.CrossEntropyLoss(reduction='none')
-    sem_cls_loss = criterion_sem_cls(end_points['sem_cls_scores'].transpose(2,1), sem_cls_label) # (B,K)
-    sem_cls_loss = torch.sum(sem_cls_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
+    #sem_cls_label = torch.gather(end_points['sem_cls_label'], 1, object_assignment) # select (B,K) from (B,K2)
+    #criterion_sem_cls = nn.CrossEntropyLoss(reduction='none')
+    #sem_cls_loss = criterion_sem_cls(end_points['sem_cls_scores'].transpose(2,1), sem_cls_label) # (B,K)
+    #sem_cls_loss = torch.sum(sem_cls_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
 
-    return center_loss, heading_class_loss, heading_residual_normalized_loss, sem_cls_loss
+    return center_loss, heading_class_loss, heading_residual_normalized_loss, rotation_vector_loss
 
 def get_loss(end_points, config):
     """ Loss functions
@@ -252,19 +264,20 @@ def get_loss(end_points, config):
         torch.sum(objectness_mask.float())/float(total_num_proposal) - end_points['pos_ratio']
 
     # Box loss and sem cls loss
-    center_loss, heading_cls_loss, heading_reg_loss, sem_cls_loss = \
+    center_loss, heading_cls_loss, heading_reg_loss, rotation_vector_loss = \
         compute_box_and_sem_cls_loss(end_points, config)
     end_points['center_loss'] = center_loss
     end_points['heading_cls_loss'] = heading_cls_loss
     end_points['heading_reg_loss'] = heading_reg_loss
+    end_points['rotation_vector_loss'] = rotation_vector_loss
     #end_points['size_cls_loss'] = size_cls_loss
     #end_points['size_reg_loss'] = size_reg_loss
-    end_points['sem_cls_loss'] = sem_cls_loss
-    box_loss = center_loss + 0.1*heading_cls_loss + heading_reg_loss
+    #end_points['sem_cls_loss'] = sem_cls_loss
+    box_loss = center_loss + 0.1*heading_cls_loss + heading_reg_loss + rotation_vector_loss
     end_points['box_loss'] = box_loss
 
     # Final loss function
-    loss = vote_loss + 0.5*objectness_loss + box_loss + 0.1*sem_cls_loss
+    loss = vote_loss + 0.5*objectness_loss + box_loss
     loss *= 10
     end_points['loss'] = loss
 

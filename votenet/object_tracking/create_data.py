@@ -46,39 +46,30 @@ def main():
 		scene = scenes[scene_index]
 
 		scene_pts = np.array(scene.points) * scale_output_pcld
+		scene_colors = np.array(scene.colors)
 
-		pcld, bb, votes, euler_angles = get_perspective_data_from_model_seed(i, model, points=num_points, center = scene_pts[np.random.randint(scene_pts.shape[0])], scene_scale = scale_output_pcld)
+		model_pcld, bb, axis_angles, theta = get_perspective_data_from_model_seed(i, model, points=num_points, center = scene_pts[np.random.randint(scene_pts.shape[0])], scene_scale = scale_output_pcld)
 
 		box3d_centers = np.asarray([bb.get_center()])
 		box3d_sizes = np.asarray([bb.get_max_bound() - bb.get_min_bound()])
 
-		points = np.asarray(pcld.points)
-		colors = np.asarray(pcld.colors)
+		model_points = np.asarray(model_pcld.points)
+		model_colors = np.asarray(model_pcld.colors)
 
-		combined_points = np.vstack((points, np.array(scene_pts))) 
-		combined_colors = np.vstack((colors, np.array(scene.colors)))
+		# combined_points = np.vstack((points, np.array(scene_pts))) 
+		# combined_colors = np.vstack((colors, np.array(scene.colors)))
 
-		pcld_out = o3d.geometry.PointCloud()
-		pcld_out.points = o3d.utility.Vector3dVector(points)
-		#pcld_out.colors = o3d.utility.Vector3dVector(colors)
-		
-		#o3d.visualization.draw_geometries([pcld_out, bb])
-		#o3d.io.write_point_cloud(str(i) + '.ply', pcld_out)
-
-		total_votes = np.zeros((combined_points.shape[0], 3))
-		total_votes[:votes.shape[0]] = votes
-
-		assert(len(combined_points) == len(combined_colors))
-
-		#point_cloud = np.asarray([[p[0], p[1], p[2], c[0], c[1], c[2]] for p,c in zip(combined_points, combined_colors)])
+		# total_votes = np.zeros((combined_points.shape[0], 3))
+		# total_votes[:votes.shape[0]] = votes
 
 		#single channel, 1 or 0, after adaptive threshold filter
-		point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(combined_points, combined_colors)])
+		scene_point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(scene_pts, scene_colors)])
+		model_point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(model_points, model_colors)])
 
-		vote_mask = np.zeros(combined_points.size)
-		vote_mask[:points.shape[0]] = 1
+		# vote_mask = np.zeros(combined_points.size)
+		# vote_mask[:points.shape[0]] = 1
 
-		np.savez(output_path + str(i) + '_data.npz', box3d_centers=box3d_centers, box3d_sizes=box3d_sizes, euler_angles=euler_angles, point_cloud=point_cloud, votes=total_votes, vote_mask=vote_mask)
+		np.savez(output_path + str(i) + '_data.npz', box3d_centers=box3d_centers, axis_angles=axis_angles, theta=theta, scene_point_cloud=scene_point_cloud, model_point_cloud=model_point_cloud)
 
 	lst = np.asarray(list(range(number_of_samples)))
 	np.random.shuffle(lst)

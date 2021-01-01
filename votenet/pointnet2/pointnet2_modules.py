@@ -179,7 +179,8 @@ class PointnetSAModuleVotes(nn.Module):
             sigma: float = None, # for RBF pooling
             normalize_xyz: bool = False, # noramlize local XYZ with radius
             sample_uniformly: bool = False,
-            ret_unique_cnt: bool = False
+            ret_unique_cnt: bool = False,
+            dropout: float = 0
     ):
         super().__init__()
 
@@ -208,7 +209,7 @@ class PointnetSAModuleVotes(nn.Module):
         mlp_spec = mlp
         if (use_xyz or use_relative_xyz) and len(mlp_spec)>0:
             mlp_spec[0] += 3
-        self.mlp_module = pt_utils.SharedMLP(mlp_spec, bn=bn)
+        self.mlp_module = pt_utils.SharedMLP(mlp_spec, bn=bn, dropout=dropout)
 
 
     def forward(self, xyz: torch.Tensor,

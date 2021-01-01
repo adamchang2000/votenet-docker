@@ -104,7 +104,9 @@ def calc_iou(box_a, box_b):
         box_a, box_b: 6D of center and lengths        
     Returns:
         iou
-    """        
+    """     
+
+    print('calcing iou')   
         
     max_a = box_a[0:3] + box_a[3:6]/2
     max_b = box_b[0:3] + box_b[3:6]/2    

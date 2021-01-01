@@ -151,7 +151,8 @@ class Pointnet2Backbone(nn.Module):
                 mlp=[input_feature_dim, 64, 64, 128],
                 use_xyz=False,
                 normalize_xyz=False,
-                use_relative_xyz=True
+                use_relative_xyz=True,
+                dropout=0.5
             )
 
         self.sa2 = PointnetSAModuleVotes(
@@ -161,7 +162,8 @@ class Pointnet2Backbone(nn.Module):
                 mlp=[128, 128, 128, 256],
                 use_xyz=False,
                 normalize_xyz=False,
-                use_relative_xyz=True
+                use_relative_xyz=True,
+                dropout=0.5
             )
 
         self.sa3 = PointnetSAModuleVotes(
@@ -171,7 +173,8 @@ class Pointnet2Backbone(nn.Module):
                 mlp=[256, 128, 128, 256],
                 use_xyz=False,
                 normalize_xyz=False,
-                use_relative_xyz=True
+                use_relative_xyz=True,
+                dropout=0.5
             )
 
         self.sa4 = PointnetSAModuleVotes(
@@ -181,7 +184,8 @@ class Pointnet2Backbone(nn.Module):
                 mlp=[256, 128, 128, 256],
                 use_xyz=False,
                 normalize_xyz=False,
-                use_relative_xyz=True
+                use_relative_xyz=True,
+                dropout=0.5
             )
 
         self.sa5 = PointnetSAModuleVotes(
@@ -191,7 +195,8 @@ class Pointnet2Backbone(nn.Module):
                 mlp=[256, 128, 128, 256],
                 use_xyz=False,
                 normalize_xyz=False,
-                use_relative_xyz=True
+                use_relative_xyz=True,
+                dropout=0.5
             )
 
         self.fp1 = PointnetFPModule(mlp=[256+256,256,256])

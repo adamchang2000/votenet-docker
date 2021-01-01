@@ -33,6 +33,23 @@ def eulerAnglesToRotationMatrix(theta):
 
     return R
 
+def getRandomRotationMatrix():
+	euler_angles = np.zeros(3)
+	euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
+	euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
+	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
+	return eulerAnglesToRotationMatrix(euler_angles)
+
+#Get rotation matrix from axis angles.
+def axisAnglesToRotationMatrix(axis_angles, theta):
+
+	if theta == 0:
+		return np.eye(3)
+
+	assert(abs(np.linalg.norm(axis_angles) - 1) <= 0.0001)
+	axis_angles_theta = np.copy(axis_angles) * theta
+	return o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angles_theta)
+
 def convert_file_to_model(filename, scale = 1):
 	try:
 		model = o3d.io.read_triangle_mesh(filename)
@@ -49,28 +66,36 @@ def convert_file_to_model(filename, scale = 1):
 		print('load failed xd')
 		exit(1)
 
-def place_model(model, xyz, euler_angles):
+def place_model(model, xyz, axis_angles, theta):
 	#print('place model called')
-	rotate_matrix_euler(euler_angles, model)
-	model.translate(xyz)
+	rotate_matrix_axis_angle(axis_angles, theta, model)
+	model.translate(xyz, relative=False)
 
-def return_origin(model, xyz, euler_angles):
+def return_origin(model, xyz, axis_angles, theta):
 	#print('return origin called')
-	model.translate(-1 * xyz)
-	invert_rotate_matrix_euler(euler_angles, model)
+	model.translate(np.zeros(3), relative=False)
+	invert_rotate_matrix_axis_angle(axis_angles, theta, model)
 
 def get_bb(model):
 	bb = model.get_axis_aligned_bounding_box()
 	return bb
 
-def rotate_matrix_euler(euler_angles, model):
-	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
-	model.rotate(eulerAnglesToRotationMatrix(euler_angles))
+# def rotate_matrix_euler(euler_angles, model):
+# 	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
+# 	model.rotate(eulerAnglesToRotationMatrix(euler_angles))
+# 	return model
+
+# def invert_rotate_matrix_euler(euler_angles, model):
+# 	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
+# 	model.rotate(eulerAnglesToRotationMatrix(euler_angles).T)
+# 	return model
+
+def rotate_matrix_axis_angle(axis_angles, theta, model):
+	model.rotate(axisAnglesToRotationMatrix(axis_angles, theta))
 	return model
 
-def invert_rotate_matrix_euler(euler_angles, model):
-	#print('euler ', eulerAnglesToRotationMatrix(euler_angles))
-	model.rotate(eulerAnglesToRotationMatrix(euler_angles).T)
+def invert_rotate_matrix_axis_angle(axis_angles, theta, model):
+	model.rotate(axisAnglesToRotationMatrix(axis_angles, theta).T)
 	return model
 
 def get_x_vec(model):
@@ -166,67 +191,60 @@ def augment_pointcloud(pointcloud):
 	return pointcloud
 
 #return pointcloud, bounding box, votes, euler_angles
-def get_perspective_data_from_model(model, xyz, euler_angles, points=20000, sample_strategy='uniform random'):
-
-	#print('perspective data called')
+def get_perspective_data_from_model(model, xyz, axis_angles, theta, points=20000, sample_strategy='uniform random'):
 
 	bb = get_bb(model)
-	place_model(model, xyz, euler_angles)
-	bb.translate(xyz)
-
-	#print('model center ', model.get_center())
-	#print('bb center ', bb.get_center())
+	place_model(model, xyz, axis_angles, theta)
+	bb.translate(xyz, relative=False)
 
 	#multiply points by 2 for more visible points
-	# factor = 5
-	# while True:
-	# 	pointcloud = sample_points(model, points * factor, sample_strategy)
-	# 	_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 50)
+	factor = 5
+	while True:
+		pointcloud = sample_points(model, points * factor, sample_strategy)
+		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 50)
 
-	# 	if len(lst) < points:
-	# 		factor += 2
-	# 	else:
-	# 		break
+		if len(lst) < points:
+			factor += 2
+		else:
+			break
 
-	# np.random.shuffle(lst)
-	# lst = np.array(lst[:points])
-	# pointcloud = pointcloud.select_down_sample(lst)
-
-	pointcloud = sample_points(model, points, sample_strategy)
+	np.random.shuffle(lst)
+	lst = np.array(lst[:points])
+	pointcloud = pointcloud.select_down_sample(lst)
 
 	#insert noise into model
 	#pointcloud = augment_pointcloud(pointcloud)
 
-	votes = []
+	return_origin(model, xyz, axis_angles, theta)
 
-	for pt in pointcloud.points:
-		votes.append(bb.get_center() - pt)
+	return pointcloud, bb, axis_angles, theta
 
-	return_origin(model, xyz, euler_angles)
-
-	return pointcloud, bb, np.asarray(votes), euler_angles
-
-#return pointcloud, bb, votes, euler angles
+#return pointcloud, bb, votes, axis angles
 def get_perspective_data_from_model_seed(seed, model, points=20000, sample_strategy='uniform random', center=np.array([0, 0, 0]), scene_scale = 1):
 	np.random.seed(seed)
 
 	#print('center ', center)
 
-	euler_angles = np.zeros(3)
-	euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
-	euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
-	euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
+	axis_angles = np.random.uniform(-1, 1, size=3)
+	axis_angles /= np.linalg.norm(axis_angles)
+
+	theta = np.random.uniform(0, np.pi * 2)
+
+	# euler_angles = np.zeros(3)
+	# euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
+	# euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
+	# euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
 	xyz = np.copy(center)
 	xyz[0] += np.random.uniform(0.01, 0.1) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
 	xyz[1] += np.random.uniform(0.01, 0.1) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
 	xyz[2] += np.random.uniform(0.01, 0.1) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
 
-	return get_perspective_data_from_model(model, np.asarray(xyz), np.asarray(euler_angles), points, sample_strategy)
+	return get_perspective_data_from_model(model, np.asarray(xyz), axis_angles, theta, points, sample_strategy)
 
 def main():
 	parser = argparse.ArgumentParser(description='Extract a model and data from an obj')
-	parser.add_argument('--filename', default='embroidery_hoop/inner_hoop.obj', help='file path to obj')
+	parser.add_argument('--filename', default='medical/textured_medical_patterns_filledin.ply', help='file path to model')
 	parser.add_argument('-n', dest='points', default=10000, type=int, help='number of points to sample, default = 20k')
 	parser.add_argument('-s', dest='sample_strategy', default='uniform random', help='point sampling strategy, available: uniform random, uniform grid')
 
@@ -240,14 +258,11 @@ def main():
 
 	#o3d.visualization.draw_geometries([pcld, bb])
 
-	pcld, bb, votes, euler_angles = get_perspective_data_from_model_seed(3, model, args.points, args.sample_strategy)
-
-	print(bb.get_max_bound())
-	print(bb.get_min_bound())
+	pcld, bb, votes, axis_angles, theta = get_perspective_data_from_model_seed(3, model, args.points, args.sample_strategy)
 
 	bb = o3d.geometry.OrientedBoundingBox.create_from_axis_aligned_bounding_box(bb)
 
-	bb.rotate(eulerAnglesToRotationMatrix(euler_angles))
+	bb.rotate(axisAnglesToRotationMatrix(axis_angles, theta))
 
 	o3d.visualization.draw_geometries([pcld, bb])
 

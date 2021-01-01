@@ -18,10 +18,12 @@ class SharedMLP(nn.Sequential):
             activation=nn.ReLU(inplace=True),
             preact: bool = False,
             first: bool = False,
-            name: str = ""
+            name: str = "",
+            dropout: float = 0
     ):
         super().__init__()
 
+        #args = [128, 64, 64, 128]
         for i in range(len(args) - 1):
             self.add_module(
                 name + 'layer{}'.format(i),
@@ -34,6 +36,12 @@ class SharedMLP(nn.Sequential):
                     preact=preact
                 )
             )
+
+            if dropout > 0 and i < len(args) - 2:
+                self.add_module(
+                    name + '_dropout_layer{}'.format(i),
+                    nn.Dropout(p=dropout)
+                )
 
 
 class _BNBase(nn.Sequential):
