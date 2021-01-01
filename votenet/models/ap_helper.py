@@ -102,7 +102,7 @@ def parse_predictions(end_points, config_dict):
             #     pred_heading_class3[i,j].detach().cpu().numpy(), pred_heading_residual3[i,j].detach().cpu().numpy())
 
             box_size = config_dict['dataset_config'].meanSize(0)
-            corners_3d_upright_camera = get_3d_box(box_size, heading_angle, pred_rot_vec, pred_center_upright_camera[i,j,:])
+            corners_3d_upright_camera = get_3d_box(box_size, heading_angle, pred_rot_vec[i,j], pred_center_upright_camera[i,j,:])
             pred_corners_3d_upright_camera[i,j] = corners_3d_upright_camera
 
     K = pred_center.shape[1] # K==num_proposal
