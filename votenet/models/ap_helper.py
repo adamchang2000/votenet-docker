@@ -249,7 +249,7 @@ def parse_groundtruths(end_points, config_dict):
             #heading_angle2 = config_dict['dataset_config'].class2angle(heading_class_label2[i,j].detach().cpu().numpy(), heading_residual_label2[i,j].detach().cpu().numpy())
             #heading_angle3 = config_dict['dataset_config'].class2angle(heading_class_label3[i,j].detach().cpu().numpy(), heading_residual_label3[i,j].detach().cpu().numpy())
             box_size = config_dict['dataset_config'].meanSize(0)
-            corners_3d_upright_camera = get_3d_box(box_size, heading_angle, rotation_vector_label.detach().cpu().numpy(), gt_center_upright_camera[i,j,:])
+            corners_3d_upright_camera = get_3d_box(box_size, heading_angle, rotation_vector_label[i,j].detach().cpu().numpy(), gt_center_upright_camera[i,j,:])
             gt_corners_3d_upright_camera[i,j] = corners_3d_upright_camera
 
     batch_gt_map_cls = []
