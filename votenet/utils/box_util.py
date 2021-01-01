@@ -13,6 +13,7 @@ from __future__ import print_function
 import math
 import numpy as np
 from scipy.spatial import ConvexHull
+import open3d as o3d
 
 def polygon_clip(subjectPolygon, clipPolygon):
    """ Clip a polygon with another polygon.
@@ -231,6 +232,16 @@ def eulerAnglesToRotationMatrix(theta) :
     R = np.dot(R_z, np.dot( R_y, R_x ))
 
     return R
+
+#Get rotation matrix from axis angles.
+def axisAnglesToRotationMatrix(axis_angles, theta):
+
+    if theta == 0:
+        return np.eye(3)
+
+    assert(abs(np.linalg.norm(axis_angles) - 1) <= 0.0001)
+    axis_angles_theta = np.copy(axis_angles) * theta
+    return o3d.geometry.get_rotation_matrix_from_axis_angle(axis_angles_theta)
 
 def get_3d_box(box_size, heading_angle, rotation_vector, center):
     ''' box_size is array(l,w,h), heading_angle is radius clockwise from pos x axis, center is xyz of box center
