@@ -93,7 +93,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
             num_proposal = pred_center.shape[1]
             obbs = []
             for j in range(num_proposal):
-                obb = config.param2obb(pred_center[i,j,0:3], [pred_heading_class[i,j], pred_heading_residual[i,j]], pred_rotation_vector[i,j])
+                obb = config.param2obb(pred_center[i,j,0:3], [pred_heading_class[i,j], pred_heading_residual[i,j]], pred_rotation_vector[i,j], 0)
                 obbs.append(obb)
             if len(obbs)>0:
                 obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
@@ -134,7 +134,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
         obbs = []
         for j in range(gt_center.shape[1]):
             if gt_mask[i,j] == 0: continue
-            obb = config.param2obb(gt_center[i,j,0:3], [gt_heading_class[i,j], gt_heading_residual[i,j]], gt_rotation_vector[i,j])
+            obb = config.param2obb(gt_center[i,j,0:3], [gt_heading_class[i,j], gt_heading_residual[i,j]], gt_rotation_vector[i,j], 0)
             obbs.append(obb)
         if len(obbs)>0:
             obbs = np.vstack(tuple(obbs)) # (num_gt_objects, 7)
