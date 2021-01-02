@@ -79,7 +79,7 @@ def compute_objectness_loss(end_points):
             within [0,num_gt_object-1]
     """ 
     # Associate proposal and GT objects by point-to-point distances
-    aggregated_vote_xyz = end_points['aggregated_vote_xyz']
+    aggregated_vote_xyz = end_points['center']
     gt_center = end_points['center_label'][:,:,0:3]
     B = gt_center.shape[0]
     K = aggregated_vote_xyz.shape[1]
