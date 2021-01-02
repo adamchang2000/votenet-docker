@@ -58,6 +58,8 @@ class OBJDetectionVotesDataset(Dataset):
         assert(extra_channels == MEAN_EXTRA_CHANNELS.shape[0])
         
         self.augment = augment
+
+        print("WARNING, CURRENTLY, SET TO INVERT ALL SINGLE CHANNEL BITS")
        
     def __len__(self):
         return len(self.samples)
@@ -120,11 +122,13 @@ class OBJDetectionVotesDataset(Dataset):
         if self.use_color and self.extra_channels > 0:
             point_cloud = point_cloud[:,0:6 + self.extra_channels]
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_COLOR_RGB)
+            point_cloud[:,6:] = 1. - point_cloud[:,6:] #INVERT SINGLE CHANNEL BITS
             point_cloud[:,6:] = (point_cloud[:,6:]-MEAN_EXTRA_CHANNELS)
         elif self.use_color:
             point_cloud = point_cloud[:,0:6]
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_COLOR_RGB)
         elif self.extra_channels > 0:
+            point_cloud[:,3:] = 1. - point_cloud[:,3:] #INVERT SINGLE CHANNEL BITS
             point_cloud = point_cloud[:,0:3 + self.extra_channels]
             point_cloud[:,3:] = (point_cloud[:,3:]-MEAN_EXTRA_CHANNELS)
         else:

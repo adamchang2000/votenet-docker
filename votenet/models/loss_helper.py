@@ -13,8 +13,8 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 from nn_distance import nn_distance, huber_loss
 
-FAR_THRESHOLD = 0.2
-NEAR_THRESHOLD = 0.1
+FAR_THRESHOLD = 0.05
+NEAR_THRESHOLD = 0.03
 GT_VOTE_FACTOR = 3 # number of GT votes per point
 OBJECTNESS_CLS_WEIGHTS = [0.2,0.8] # put larger weights on positive objectness
 
@@ -147,8 +147,8 @@ def compute_rotation_loss(end_points, object_assignment, objectness_label, num_h
     # Compute rotation vector loss
     pred_rotation_vector = end_points['rotation_vector']
     gt_rotation_vector = end_points['rotation_vector_label'][:,:,0:3]
-    dist1, ind1, dist2, _ = nn_distance(pred_rotation_vector, gt_rotation_vector, l1smooth=True) # dist1: BxK, dist2: BxK2 #huber lossing it
-    box_label_mask = end_points['box_label_mask']
+    dist1, ind1, dist2, _ = nn_distance(pred_rotation_vector, gt_rotation_vector) # dist1: BxK, dist2: BxK2
+    #box_label_mask = end_points['box_label_mask']
     objectness_label = end_points['objectness_label'].float()
     centroid_reg_loss1 = \
         torch.sum(dist1*objectness_label)/(torch.sum(objectness_label)+1e-6)
