@@ -67,7 +67,7 @@ class OBJDatasetConfig(object):
             angle = angle - 2*np.pi
         return angle
 
-    def param2obb(self, center, heading_class_and_residual, rotation_vector):
+    def param2obb(self, center, heading_class_and_residual, rotation_vector, size_class):
 
         heading_angle = self.class2angle(heading_class_and_residual[0], heading_class_and_residual[0])
         #print(heading_classes_and_residuals)
