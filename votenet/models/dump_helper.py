@@ -93,9 +93,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
             num_proposal = pred_center.shape[1]
             obbs = []
             for j in range(num_proposal):
-                obb = config.param2obb(pred_center[i,j,0:3], [[pred_heading_class[i,j], pred_heading_residual[i,j]], [pred_heading_class2[i,j], pred_heading_residual2[i,j]], 
-                    [pred_heading_class3[i,j], pred_heading_residual3[i,j]]],
-                                0)
+                obb = config.param2obb(pred_center[i,j,0:3], [pred_heading_class[i,j], pred_heading_residual[i,j]], pred_rotation_vector[i,j])
                 obbs.append(obb)
             if len(obbs)>0:
                 obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
@@ -117,11 +115,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
     gt_heading_class = end_points['heading_class_label'].cpu().numpy() # B,K2
     gt_heading_residual = end_points['heading_residual_label'].cpu().numpy() # B,K2
 
-    gt_heading_class2 = end_points['heading_class_label2'].cpu().numpy() # B,K2
-    gt_heading_residual2 = end_points['heading_residual_label2'].cpu().numpy() # B,K2
-
-    gt_heading_class3 = end_points['heading_class_label3'].cpu().numpy() # B,K2
-    gt_heading_residual3 = end_points['heading_residual_label3'].cpu().numpy() # B,K2
+    gt_rotation_vector = end_points['rotation_vector_label'].cpu().numpy()
 
     #gt_size_class = end_points['size_class_label'].cpu().numpy() # B,K2
     #gt_size_residual = end_points['size_residual_label'].cpu().numpy() # B,K2,3
@@ -140,8 +134,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
         obbs = []
         for j in range(gt_center.shape[1]):
             if gt_mask[i,j] == 0: continue
-            obb = config.param2obb(gt_center[i,j,0:3], [[gt_heading_class[i,j], gt_heading_residual[i,j]], [gt_heading_class2[i,j], gt_heading_residual2[i,j]], 
-                [gt_heading_class3[i,j], gt_heading_residual3[i,j]]], 0)
+            obb = config.param2obb(gt_center[i,j,0:3], [gt_heading_class[i,j], gt_heading_residual[i,j]], gt_rotation_vector[i,j])
             obbs.append(obb)
         if len(obbs)>0:
             obbs = np.vstack(tuple(obbs)) # (num_gt_objects, 7)
