@@ -117,7 +117,7 @@ class OBJDetectionVotesDataset(Dataset):
         votes = np.vstack((votes, np.zeros((scene_point_cloud.shape[0], 3))))
         point_cloud = np.vstack((model_point_cloud, scene_point_cloud))
 
-        vote_mask = np.hstack((np.ones(model_point_cloud.shape[0]), np.ones(scene_point_cloud.shape[0])))
+        vote_mask = np.hstack((np.ones(model_point_cloud.shape[0]), np.zeros(scene_point_cloud.shape[0])))
 
         if self.use_color and self.extra_channels > 0:
             point_cloud = point_cloud[:,0:6 + self.extra_channels]
