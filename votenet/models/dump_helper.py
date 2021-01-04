@@ -97,12 +97,12 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
                 obbs.append(obb)
             if len(obbs)>0:
                 obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
-                pc_util.write_oriented_bbox_6dof(obbs[objectness_prob>DUMP_CONF_THRESH,:], os.path.join(dump_dir, '%06d_pred_confident_bbox.ply'%(idx_beg+i)))
-                pc_util.write_oriented_bbox_6dof(obbs[np.logical_and(objectness_prob>DUMP_CONF_THRESH, pred_mask[i,:]==1),:], os.path.join(dump_dir, '%06d_pred_confident_nms_bbox.ply'%(idx_beg+i)))
                 try:
+                    pc_util.write_oriented_bbox_6dof(obbs[objectness_prob>DUMP_CONF_THRESH,:], os.path.join(dump_dir, '%06d_pred_confident_bbox.ply'%(idx_beg+i)))
+                    pc_util.write_oriented_bbox_6dof(obbs[np.logical_and(objectness_prob>DUMP_CONF_THRESH, pred_mask[i,:]==1),:], os.path.join(dump_dir, '%06d_pred_confident_nms_bbox.ply'%(idx_beg+i)))
                     pc_util.write_oriented_bbox_6dof(obbs[np.logical_and(objectness_prob==np.max(objectness_prob), pred_mask[i,:]==1),:], os.path.join(dump_dir, '%06d_pred_SUPER_%f_confident_nms_bbox.ply'%(idx_beg+i, round(np.max(objectness_prob), 4))))
                 except:
-                    print("write super failed")
+                    print("write bbox output failed")
                 pc_util.write_oriented_bbox_6dof(obbs[pred_mask[i,:]==1,:], os.path.join(dump_dir, '%06d_pred_nms_bbox.ply'%(idx_beg+i)))
                 pc_util.write_oriented_bbox_6dof(obbs, os.path.join(dump_dir, '%06d_pred_bbox.ply'%(idx_beg+i)))
             else:
