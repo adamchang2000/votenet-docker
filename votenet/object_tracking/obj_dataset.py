@@ -60,6 +60,9 @@ class OBJDetectionVotesDataset(Dataset):
         self.augment = augment
 
         print("WARNING, CURRENTLY, SET TO INVERT ALL SINGLE CHANNEL BITS")
+
+        if split_set == 'train' and not augment:
+            print("WARNING, AUGMENTATION OFF FOR TRAINING")
        
     def __len__(self):
         return len(self.samples)
