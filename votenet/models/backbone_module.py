@@ -149,9 +149,9 @@ class Pointnet2Backbone(nn.Module):
                 radius=0.05,
                 nsample=64,
                 mlp=[input_feature_dim, 64, 64, 128],
-                use_xyz=False,
-                normalize_xyz=False,
-                use_relative_xyz=True,
+                use_xyz=True,
+                normalize_xyz=True,
+                use_relative_xyz=False,
                 dropout=0.5
             )
 
@@ -160,9 +160,9 @@ class Pointnet2Backbone(nn.Module):
                 radius=0.1,
                 nsample=32,
                 mlp=[128, 128, 128, 256],
-                use_xyz=False,
-                normalize_xyz=False,
-                use_relative_xyz=True,
+                use_xyz=True,
+                normalize_xyz=True,
+                use_relative_xyz=False,
                 dropout=0.5
             )
 
@@ -171,9 +171,9 @@ class Pointnet2Backbone(nn.Module):
                 radius=0.25,
                 nsample=16,
                 mlp=[256, 128, 128, 256],
-                use_xyz=False,
-                normalize_xyz=False,
-                use_relative_xyz=True,
+                use_xyz=True,
+                normalize_xyz=True,
+                use_relative_xyz=False,
                 dropout=0.5
             )
 
@@ -182,9 +182,9 @@ class Pointnet2Backbone(nn.Module):
                 radius=0.5,
                 nsample=16,
                 mlp=[256, 128, 128, 256],
-                use_xyz=False,
-                normalize_xyz=False,
-                use_relative_xyz=True,
+                use_xyz=True,
+                normalize_xyz=True,
+                use_relative_xyz=False,
                 dropout=0.5
             )
 
@@ -193,9 +193,9 @@ class Pointnet2Backbone(nn.Module):
                 radius=1.25,
                 nsample=16,
                 mlp=[256, 128, 128, 256],
-                use_xyz=False,
-                normalize_xyz=False,
-                use_relative_xyz=True,
+                use_xyz=True,
+                normalize_xyz=True,
+                use_relative_xyz=False,
                 dropout=0.5
             )
 
