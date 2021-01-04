@@ -63,6 +63,8 @@ class OBJDetectionVotesDataset(Dataset):
 
         if split_set == 'train' and not augment:
             print("WARNING, AUGMENTATION OFF FOR TRAINING")
+
+        print(split_set, augment)
        
     def __len__(self):
         return len(self.samples)
