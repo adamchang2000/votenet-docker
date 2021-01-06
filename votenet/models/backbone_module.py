@@ -146,34 +146,34 @@ class Pointnet2Backbone(nn.Module):
 
         self.sa1 = PointnetSAModuleVotes(
                 npoint=2048,
-                radius=0.05,
+                radius=0.03,
                 nsample=64,
                 mlp=[input_feature_dim, 64, 64, 128],
-                use_xyz=True,
-                normalize_xyz=True,
-                use_relative_xyz=False,
+                use_xyz=False,
+                normalize_xyz=False,
+                use_relative_xyz=True,
                 dropout=0.5
             )
 
         self.sa2 = PointnetSAModuleVotes(
                 npoint=1024,
-                radius=0.1,
+                radius=0.05,
                 nsample=32,
                 mlp=[128, 128, 128, 256],
-                use_xyz=True,
-                normalize_xyz=True,
-                use_relative_xyz=False,
+                use_xyz=False,
+                normalize_xyz=False,
+                use_relative_xyz=True,
                 dropout=0.5
             )
 
         self.sa3 = PointnetSAModuleVotes(
                 npoint=512,
-                radius=0.25,
+                radius=0.2,
                 nsample=16,
                 mlp=[256, 128, 128, 256],
-                use_xyz=True,
-                normalize_xyz=True,
-                use_relative_xyz=False,
+                use_xyz=False,
+                normalize_xyz=False,
+                use_relative_xyz=True,
                 dropout=0.5
             )
 
@@ -182,9 +182,9 @@ class Pointnet2Backbone(nn.Module):
                 radius=0.5,
                 nsample=16,
                 mlp=[256, 128, 128, 256],
-                use_xyz=True,
-                normalize_xyz=True,
-                use_relative_xyz=False,
+                use_xyz=False,
+                normalize_xyz=False,
+                use_relative_xyz=True,
                 dropout=0.5
             )
 
@@ -193,9 +193,9 @@ class Pointnet2Backbone(nn.Module):
                 radius=1.25,
                 nsample=16,
                 mlp=[256, 128, 128, 256],
-                use_xyz=True,
-                normalize_xyz=True,
-                use_relative_xyz=False,
+                use_xyz=False,
+                normalize_xyz=False,
+                use_relative_xyz=True,
                 dropout=0.5
             )
 

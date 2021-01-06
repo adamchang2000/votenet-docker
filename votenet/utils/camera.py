@@ -20,9 +20,9 @@ class Camera():
         return
 
     #return next frame
-    #success, BGR aligned to depth, depth, depth_pcld
+    #success, BGR aligned to depth, depth, depth_pcld, IR
     def get_frame(self):
-        return False, 0, 0, 0
+        return False, 0, 0, 0, 0
 
     def start(self):
         return
@@ -46,6 +46,8 @@ class D435i_camera(Camera):
         config = rs.config()
         config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
         config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        config.enable_stream(rs.stream.infrared, 1, 640, 480, rs.format.y8, 30)
+        config.enable_stream(rs.stream.infrared, 2, 640, 480, rs.format.y8, 30)
 
         # Start streaming
         profile = self.pipeline.start(config)
@@ -73,10 +75,11 @@ class D435i_camera(Camera):
         # Get aligned frames
         depth_frame = aligned_frames.get_depth_frame() # aligned_depth_frame is a 640x480 depth image
         aligned_color_frame = aligned_frames.get_color_frame()
+        ir_frame = np.asarray(frames.get_infrared_frame().get_data()).astype(np.uint16) * 257
 
         # Validate that both frames are valid
         if not depth_frame or not aligned_color_frame:
-            return False, 0, 0, 0
+            return False, 0, 0, 0, 0
 
         depth_image = np.asanyarray(depth_frame.get_data())
         color_image = np.asanyarray(aligned_color_frame.get_data())
@@ -91,7 +94,7 @@ class D435i_camera(Camera):
 
         depth_image = depth_image.astype(np.float32) * self.depth_scale
 
-        return True, color_image, depth_image, pcld
+        return True, color_image, depth_image, pcld, ir_frame
 
     def stop(self):
         self.pipeline.stop()
@@ -121,14 +124,16 @@ class Azure_Kinect_camera(Camera):
 
             depth = capture.depth.astype(np.float32) / 1000.
             color = capture.color
+            #ir = capture.transformed_ir
+            ir = capture.ir
             transformed_color = capture.transformed_color
             pcld = capture.depth_point_cloud.astype(np.float32) / 1000.
             pcld = pcld.reshape((pcld.shape[0] * pcld.shape[1], pcld.shape[2]))
 
-            return True, transformed_color, depth, pcld
+            return True, transformed_color, depth, pcld, ir
 
         else:
-            return False, 0, 0, 0
+            return False, 0, 0, 0, 0
 
 
     def stop(self):

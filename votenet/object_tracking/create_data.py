@@ -63,7 +63,8 @@ def main():
 		# total_votes[:votes.shape[0]] = votes
 
 		#single channel, 1 or 0, after adaptive threshold filter
-		scene_point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(scene_pts, scene_colors)])
+		#scene_point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(scene_pts, scene_colors)])
+		scene_point_cloud = np.array([[0, 0, 0, 0]])
 		model_point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(model_points, model_colors)])
 
 		# vote_mask = np.zeros(combined_points.size)

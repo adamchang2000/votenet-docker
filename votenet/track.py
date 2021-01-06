@@ -101,16 +101,23 @@ def main():
             print('start time ', timestamp)
         
 
-            success, color_image, depth_image, pcld = camera.get_frame()
+            success, color_image, depth_image, pcld, ir = camera.get_frame()
             if not success:
                 continue
 
             depth_image_flatten = depth_image.flatten()
 
             gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-            #gray_image = adaptive_threshold_3d_surface(gray_image, depth_image)
-            #gray_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 51, 10)
             gray_image = adaptive_threshold_3d_surface(gray_image, depth_image)
+
+            print(ir.dtype)
+            print(ir.shape)
+            print(np.max(ir))
+
+            ir = hard_threshold_image(ir, 65000, val = 65535)
+
+            print(np.max(ir))
+            print(ir.dtype)
 
             #rescale from 0-255 to 0-1
             gray_image_flatten = gray_image.flatten() / 255.
@@ -161,9 +168,11 @@ def main():
             cv2.namedWindow('depth', cv2.WINDOW_AUTOSIZE)
             cv2.namedWindow('color', cv2.WINDOW_AUTOSIZE)
             cv2.namedWindow('gray', cv2.WINDOW_AUTOSIZE)
+            cv2.namedWindow('ir', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('depth', depth_image)
             cv2.imshow('color', color_image)
             cv2.imshow('gray', gray_image)
+            cv2.imshow('ir', ir)
                 
 
             if args.save_data:
@@ -173,7 +182,8 @@ def main():
 
                 
                 cv2.imwrite(os.path.join(output_dir, str(idx)+'.png'), color_image)
-                #cv2.imwrite(os.path.join(output_dir, str(idx)+'d.png'), depth_image)
+                cv2.imwrite(os.path.join(output_dir, str(idx)+'_d.png'), depth_image)
+                cv2.imwrite(os.path.join(output_dir, str(idx)+'_ir.png'), ir)
             key = cv2.waitKey(1)
 
             print('elapsed time for frame: ', datetime.now() - timestamp)

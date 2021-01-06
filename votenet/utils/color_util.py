@@ -123,6 +123,13 @@ def adaptive_threshold_3d_surface(grayscale, depth, kernel_size = 81):
 
 	return thresh_image
 
+#takes in a 1 channel image and outputs binary thresholded image
+def hard_threshold_image(image, thresh, val=1.):
+	assert(len(image.shape) == 2)
+	_, thresh_image = cv2.threshold(image,thresh,val,cv2.THRESH_BINARY)
+	return thresh_image
+
+
 def main():
 	test_color = cv2.imread(r'C:\Users\adam2\Desktop\votenet-docker\votenet\6.png')
 	test_depth = np.array(cv2.imread(r'C:\Users\adam2\Desktop\votenet-docker\votenet\6d.png', cv2.IMREAD_UNCHANGED))

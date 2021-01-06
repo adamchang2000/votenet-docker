@@ -11,6 +11,8 @@ def main():
 	eval_out = os.path.join(os.path.dirname(os.path.realpath(log_file)), 'Eval_losses.png')
 	train_out = os.path.join(os.path.dirname(os.path.realpath(log_file)), 'Train_losses.png')
 
+	dir_title = os.path.dirname(os.path.realpath(log_file)).split("\\")[-1]
+
 	assert(os.path.exists(log_file))
 
 	re_eval = r"eval mean (.*): (\d+.\d+)"
@@ -43,7 +45,7 @@ def main():
 		data /= max(np.max(data), 0.001)
 
 		plt.plot(data, label=key)
-	plt.title('Eval losses')
+	plt.title('Eval losses: ' + dir_title)
 	plt.legend()
 	plt.savefig(eval_out)
 	plt.close()
@@ -53,7 +55,7 @@ def main():
 		data /= max(np.max(data), 0.001)
 
 		plt.plot(data, label=key)
-	plt.title('Train losses')
+	plt.title('Train losses: ' +  dir_title)
 	plt.legend()
 	plt.savefig(train_out)
 	plt.close()
