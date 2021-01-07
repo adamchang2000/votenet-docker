@@ -98,6 +98,7 @@ def compute_objectness_loss(end_points):
 
     # Compute objectness loss
     objectness_scores = end_points['objectness_scores']
+
     criterion = nn.CrossEntropyLoss(torch.Tensor(OBJECTNESS_CLS_WEIGHTS).cuda(), reduction='none')
     objectness_loss = criterion(objectness_scores.transpose(2,1), objectness_label)
     objectness_loss = torch.sum(objectness_loss * objectness_mask)/(torch.sum(objectness_mask)+1e-6)
@@ -147,7 +148,12 @@ def compute_rotation_loss(end_points, object_assignment, objectness_label, num_h
     # Compute rotation vector loss
     pred_rotation_vector = end_points['rotation_vector']
     gt_rotation_vector = end_points['rotation_vector_label'][:,:,0:3]
-    dist1, ind1, dist2, _ = nn_distance(pred_rotation_vector, gt_rotation_vector) # dist1: BxK, dist2: BxK2
+
+    pred_norms = torch.norm(pred_rotation_vector, dim=2).unsqueeze(2).repeat(1, 1, 3)
+
+    pred_rotation_vector_normalized = pred_rotation_vector / pred_norms
+
+    dist1, ind1, dist2, _ = nn_distance(pred_rotation_vector_normalized, gt_rotation_vector) # dist1: BxK, dist2: BxK2
     #box_label_mask = end_points['box_label_mask']
     objectness_label = end_points['objectness_label'].float()
     centroid_reg_loss1 = \
@@ -155,7 +161,6 @@ def compute_rotation_loss(end_points, object_assignment, objectness_label, num_h
     # centroid_reg_loss2 = \
     #     torch.sum(dist2*box_label_mask)/(torch.sum(box_label_mask)+1e-6)
     rotation_vector_loss = centroid_reg_loss1# + centroid_reg_loss2
-
 
     return heading_class_loss, heading_residual_normalized_loss, rotation_vector_loss
 
