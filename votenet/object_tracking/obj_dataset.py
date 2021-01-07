@@ -122,9 +122,11 @@ class OBJDetectionVotesDataset(Dataset):
 
         votes = model_point_cloud[:,:3] - box3d_centers
         votes = np.vstack((votes, np.zeros((scene_point_cloud.shape[0], 3))))
-        
+
         if len(scene_point_cloud) > 0:
             point_cloud = np.vstack((model_point_cloud, scene_point_cloud))
+        else:
+            point_cloud = model_point_cloud
 
         vote_mask = np.hstack((np.ones(model_point_cloud.shape[0]), np.zeros(scene_point_cloud.shape[0])))
 
