@@ -358,7 +358,7 @@ def train_one_epoch():
             TRAIN_VISUALIZER.log_scalars({key:stat_dict[key]/batch_interval for key in stat_dict},
                 (EPOCH_CNT*len(TRAIN_DATALOADER)+batch_idx)*BATCH_SIZE)
             for key in sorted(stat_dict.keys()):
-                log_string('mean %s: %f'%(key, stat_dict[key]/batch_interval))
+                log_string('mean %s: %f'%(key, stat_dict[key]/(batch_interval * BATCH_SIZE)))
                 stat_dict[key] = 0
 
 
@@ -411,7 +411,7 @@ def evaluate_one_epoch():
     TEST_VISUALIZER.log_scalars({key:stat_dict[key]/float(batch_idx+1) for key in stat_dict},
         (EPOCH_CNT+1)*len(TRAIN_DATALOADER)*BATCH_SIZE)
     for key in sorted(stat_dict.keys()):
-        log_string('eval mean %s: %f'%(key, stat_dict[key]/(float(batch_idx+1))))
+        log_string('eval mean %s: %f'%(key, stat_dict[key]/(float(batch_idx+1) * BATCH_SIZE)))
 
     # Evaluate average precision
     metrics_dict = ap_calculator.compute_metrics()
