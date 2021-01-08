@@ -363,7 +363,7 @@ def train_one_epoch():
             for key in sorted(stat_dict.keys()):
                 log_string('mean %s: %f'%(key, stat_dict[key]/(sample_count)))
                 stat_dict[key] = 0
-                sample_count = 0
+            sample_count = 0
 
 
 def evaluate_one_epoch():
