@@ -336,7 +336,7 @@ def train_one_epoch():
             # Compute loss and gradients, update parameters.
             for key in batch_data_label:
                 assert(key not in end_points)
-                end_points[key] = batch_data_label[key]
+                end_points[key] = batch_data_label[key][sample_iter:sample_iter+BATCH_CHUNK_SIZE]
 
             loss, end_points = criterion(end_points, DATASET_CONFIG)
             loss.backward()
