@@ -309,6 +309,8 @@ def plot_grad_flow(named_parameters, i):
     plt.savefig('grad_flow' + str(i) + '.png')
 
 
+BATCH_CHUNK_SIZE = 8
+
 def train_one_epoch():
     global ITER_CNT
     stat_dict = {} # collect statistics
@@ -323,14 +325,23 @@ def train_one_epoch():
         # Forward pass
         optimizer.zero_grad()
         inputs = {'point_clouds': batch_data_label['point_clouds']}
-        end_points = net(inputs)
-        
-        # Compute loss and gradients, update parameters.
-        for key in batch_data_label:
-            assert(key not in end_points)
-            end_points[key] = batch_data_label[key]
-        loss, end_points = criterion(end_points, DATASET_CONFIG)
-        loss.backward()
+
+        sample_iter = 0
+
+        while sample_iter < len(inputs['point_clouds']):
+            batch_chunk = {'point_clouds': inputs['point_clouds'][sample_iter:sample_iter+BATCH_CHUNK_SIZE]}
+
+            end_points = net(batch_chunk)
+
+            # Compute loss and gradients, update parameters.
+            for key in batch_data_label:
+                assert(key not in end_points)
+                end_points[key] = batch_data_label[key]
+
+            loss, end_points = criterion(end_points, DATASET_CONFIG)
+            loss.backward()
+
+            sample_iter += BATCH_CHUNK_SIZE
         optimizer.step()
             
         ITER_CNT += 1
