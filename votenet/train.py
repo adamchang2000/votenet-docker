@@ -341,16 +341,16 @@ def train_one_epoch():
             loss, end_points = criterion(end_points, DATASET_CONFIG)
             loss.backward()
 
+            # Accumulate statistics and print out
+            for key in end_points:
+                if 'loss' in key or 'acc' in key or 'ratio' in key:
+                    if key not in stat_dict: stat_dict[key] = 0
+                    stat_dict[key] += end_points[key].item()
+
             sample_iter += BATCH_CHUNK_SIZE
         optimizer.step()
             
         ITER_CNT += 1
-
-        # Accumulate statistics and print out
-        for key in end_points:
-            if 'loss' in key or 'acc' in key or 'ratio' in key:
-                if key not in stat_dict: stat_dict[key] = 0
-                stat_dict[key] += end_points[key].item()
 
         batch_interval = 10
         if (batch_idx+1) % batch_interval == 0:
@@ -375,28 +375,37 @@ def evaluate_one_epoch():
         
         # Forward pass
         inputs = {'point_clouds': batch_data_label['point_clouds']}
-        with torch.no_grad():
-            end_points = net(inputs)
 
-        # Compute loss
-        for key in batch_data_label:
-            assert(key not in end_points)
-            end_points[key] = batch_data_label[key]
-        loss, end_points = criterion(end_points, DATASET_CONFIG)
+        sample_iter = 0
 
-        # Accumulate statistics and print out
-        for key in end_points:
-            if 'loss' in key or 'acc' in key or 'ratio' in key:
-                if key not in stat_dict: stat_dict[key] = 0
-                stat_dict[key] += end_points[key].item()
+        while sample_iter < len(inputs['point_clouds']):
+            batch_chunk = {'point_clouds': inputs['point_clouds'][sample_iter:sample_iter+BATCH_CHUNK_SIZE]}
 
-        batch_pred_map_cls = parse_predictions(end_points, CONFIG_DICT) 
-        batch_gt_map_cls = parse_groundtruths(end_points, CONFIG_DICT) 
-        ap_calculator.step(batch_pred_map_cls, batch_gt_map_cls)
+            with torch.no_grad():
+                end_points = net(batch_chunk)
 
-        # Dump evaluation results for visualization
-        if FLAGS.dump_results and batch_idx == 0 and EPOCH_CNT %10 == 0:
-            MODEL.dump_results(end_points, DUMP_DIR, DATASET_CONFIG) 
+            # Compute loss and gradients, update parameters.
+            for key in batch_data_label:
+                assert(key not in end_points)
+                end_points[key] = batch_data_label[key][sample_iter:sample_iter+BATCH_CHUNK_SIZE]
+
+            loss, end_points = criterion(end_points, DATASET_CONFIG)
+
+            sample_iter += BATCH_CHUNK_SIZE
+
+            # Accumulate statistics and print out
+            for key in end_points:
+                if 'loss' in key or 'acc' in key or 'ratio' in key:
+                    if key not in stat_dict: stat_dict[key] = 0
+                    stat_dict[key] += end_points[key].item()
+
+            batch_pred_map_cls = parse_predictions(end_points, CONFIG_DICT) 
+            batch_gt_map_cls = parse_groundtruths(end_points, CONFIG_DICT) 
+            ap_calculator.step(batch_pred_map_cls, batch_gt_map_cls)
+
+            # Dump evaluation results for visualization
+            if FLAGS.dump_results and batch_idx == 0 and EPOCH_CNT %10 == 0:
+                MODEL.dump_results(end_points, DUMP_DIR, DATASET_CONFIG) 
 
     # Log statistics
     TEST_VISUALIZER.log_scalars({key:stat_dict[key]/float(batch_idx+1) for key in stat_dict},
