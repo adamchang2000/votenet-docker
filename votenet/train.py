@@ -314,6 +314,7 @@ BATCH_CHUNK_SIZE = 8
 def train_one_epoch():
     global ITER_CNT
     stat_dict = {} # collect statistics
+    sample_count = 0
     
     bnm_scheduler.step() # decay BN momentum
     net.train() # set model to training mode
@@ -331,7 +332,9 @@ def train_one_epoch():
         while sample_iter < len(inputs['point_clouds']):
             batch_chunk = {'point_clouds': inputs['point_clouds'][sample_iter:sample_iter+BATCH_CHUNK_SIZE]}
 
+            sample_count += len(batch_chunk['point_clouds'])
             end_points = net(batch_chunk)
+
 
             # Compute loss and gradients, update parameters.
             for key in batch_data_label:
@@ -355,15 +358,17 @@ def train_one_epoch():
         batch_interval = 10
         if (batch_idx+1) % batch_interval == 0:
             log_string(' ---- batch: %03d ----' % (batch_idx+1))
-            TRAIN_VISUALIZER.log_scalars({key:stat_dict[key]/batch_interval for key in stat_dict},
+            TRAIN_VISUALIZER.log_scalars({key:stat_dict[key]/sample_count for key in stat_dict},
                 (EPOCH_CNT*len(TRAIN_DATALOADER)+batch_idx)*BATCH_SIZE)
             for key in sorted(stat_dict.keys()):
-                log_string('mean %s: %f'%(key, stat_dict[key]/(batch_interval * BATCH_SIZE)))
+                log_string('mean %s: %f'%(key, stat_dict[key]/(sample_count)))
                 stat_dict[key] = 0
+                sample_count = 0
 
 
 def evaluate_one_epoch():
     stat_dict = {} # collect statistics
+    sample_count = 0
     ap_calculator = APCalculator(ap_iou_thresh=FLAGS.ap_iou_thresh,
         class2type_map=DATASET_CONFIG.class2type)
     net.eval() # set model to eval mode (for bn and dp)
@@ -380,7 +385,7 @@ def evaluate_one_epoch():
 
         while sample_iter < len(inputs['point_clouds']):
             batch_chunk = {'point_clouds': inputs['point_clouds'][sample_iter:sample_iter+BATCH_CHUNK_SIZE]}
-
+            sample_count += len(batch_chunk['point_clouds'])
             with torch.no_grad():
                 end_points = net(batch_chunk)
 
@@ -391,7 +396,6 @@ def evaluate_one_epoch():
 
             loss, end_points = criterion(end_points, DATASET_CONFIG)
 
-            sample_iter += BATCH_CHUNK_SIZE
 
             # Accumulate statistics and print out
             for key in end_points:
@@ -407,18 +411,20 @@ def evaluate_one_epoch():
             if FLAGS.dump_results and batch_idx == 0 and EPOCH_CNT %10 == 0:
                 MODEL.dump_results(end_points, DUMP_DIR, DATASET_CONFIG) 
 
+            sample_iter += BATCH_CHUNK_SIZE
+
     # Log statistics
-    TEST_VISUALIZER.log_scalars({key:stat_dict[key]/float(batch_idx+1) for key in stat_dict},
+    TEST_VISUALIZER.log_scalars({key:stat_dict[key] / sample_count for key in stat_dict},
         (EPOCH_CNT+1)*len(TRAIN_DATALOADER)*BATCH_SIZE)
     for key in sorted(stat_dict.keys()):
-        log_string('eval mean %s: %f'%(key, stat_dict[key]/(float(batch_idx+1) * BATCH_SIZE)))
+        log_string('eval mean %s: %f'%(key, stat_dict[key] / (sample_count)))
 
     # Evaluate average precision
     metrics_dict = ap_calculator.compute_metrics()
     for key in metrics_dict:
         log_string('eval %s: %f'%(key, metrics_dict[key]))
 
-    mean_loss = stat_dict['loss']/float(batch_idx+1)
+    mean_loss = stat_dict['loss'] / sample_count
     return mean_loss
 
 
