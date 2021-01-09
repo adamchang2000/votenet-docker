@@ -79,7 +79,7 @@ class ProposalModule(nn.Module):
                 nsample=16,
                 mlp=[self.seed_feat_dim, 128, 128, 128],
                 use_xyz=True,
-                normalize_xyz=False,
+                normalize_xyz=True,
                 use_relative_xyz=False,
                 dropout=0.3
             )
