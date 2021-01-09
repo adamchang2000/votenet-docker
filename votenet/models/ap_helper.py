@@ -232,7 +232,7 @@ def parse_groundtruths(end_points, config_dict):
     #heading_residual_label2 = end_points['heading_residual_label2']
     #heading_class_label3 = end_points['heading_class_label3']
     #heading_residual_label3 = end_points['heading_residual_label3']
-    rotation_vector_label = end_points['rotation_vector']
+    rotation_vector_label = end_points['rotation_vector_label']
     # size_class_label = end_points['size_class_label']
     # size_residual_label = end_points['size_residual_label']
     box_label_mask = end_points['box_label_mask']
