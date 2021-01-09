@@ -1,3 +1,7 @@
-python3.7 train.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=75000 --channels 1 --no_height --batch_size=16
-python3.7 eval.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=75000 --channels 1 --no_height --batch_size=16 --checkpoint_path=log/checkpoint.tar --dump_dir=dump
+python3.7 train.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=75000 --channels 1 --no_height --batch_size=128 --dump_dir=dump --dump_results
+python3.7 eval.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=75000 --channels 1 --no_height --batch_size=128 --checkpoint_path=log/checkpoint.tar --dump_dir=dump
 python track.py --model_path "C:\Users\adam2\Desktop\votenet-docker\votenet\object_tracking\medical\choukemoduan_v0.obj" --network_path 
+
+
+python train.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=3000 --channels 1 --no_height --batch_size=1
+python eval.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=3000 --channels 1 --no_height --batch_size=1 --checkpoint_path=log/checkpoint.tar --dump_dir=dump

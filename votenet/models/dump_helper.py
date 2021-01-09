@@ -13,6 +13,7 @@ sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import pc_util
 
 DUMP_CONF_THRESH = 0.1 # Dump boxes with obj prob larger than that.
+GT_VOTE_FACTOR = 3 # number of GT votes per point
 
 def softmax(x):
     ''' Numpy function for softmax'''
@@ -113,6 +114,26 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
         return
 
     # LABELS
+
+    num_seed = end_points['seed_xyz'].shape[1] # B,num_seed,3
+    seed_inds = end_points['seed_inds'].long() # B,num_seed in [0,num_points-1]
+    seed_gt_votes_mask = torch.gather(end_points['vote_label_mask'], 1, seed_inds)
+    seed_inds_expand = seed_inds.view(batch_size,num_seed,1).repeat(1,1,3*GT_VOTE_FACTOR)
+    seed_gt_votes = torch.gather(end_points['vote_label'], 1, seed_inds_expand)
+    seed_gt_votes += end_points['seed_xyz'].repeat(1,1,3)
+    seed_gt_votes = seed_gt_votes.cpu().numpy()
+
+    print(seed_gt_votes.shape)
+    print(seed_gt_votes[0][0])
+    print(seed_gt_votes[0][2])
+    print(seed_gt_votes[0][3])
+    print(seed_gt_votes[0][4])
+    print(seed_gt_votes[0][5])
+    print(seed_gt_votes[0][6])
+    print(seed_gt_votes[0][7])
+
+
+
     gt_center = end_points['center_label'].cpu().numpy() # (B,MAX_NUM_OBJ,3)
     gt_mask = end_points['box_label_mask'].cpu().numpy() # B,K2
     gt_heading_class = end_points['heading_class_label'].cpu().numpy() # B,K2
@@ -126,6 +147,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
     objectness_mask = end_points['objectness_mask'].detach().cpu().numpy() # (B,K,)
 
     for i in range(batch_size):
+        pc_util.write_ply(seed_gt_votes[i,:,0:3], os.path.join(dump_dir, '%06d_gt_votes_pc.ply'%(idx_beg+i)))
         if np.sum(objectness_label[i,:])>0:
             pc_util.write_ply(pred_center[i,objectness_label[i,:]>0,0:3], os.path.join(dump_dir, '%06d_gt_positive_proposal_pc.ply'%(idx_beg+i)))
         if np.sum(objectness_mask[i,:])>0:

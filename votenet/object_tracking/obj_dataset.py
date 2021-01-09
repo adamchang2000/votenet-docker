@@ -120,7 +120,10 @@ class OBJDetectionVotesDataset(Dataset):
             theta = np.linalg.norm(axis_angles)
             axis_angles /= np.linalg.norm(axis_angles)
 
-        votes = model_point_cloud[:,:3] - box3d_centers
+        votes = box3d_centers - model_point_cloud[:,:3]
+
+        print(votes.shape)
+
         votes = np.vstack((votes, np.zeros((scene_point_cloud.shape[0], 3))))
 
         if len(scene_point_cloud) > 0:
@@ -210,7 +213,6 @@ class OBJDetectionVotesDataset(Dataset):
         angle_classes1 = np.asarray([angle_classes[0]])
         angle_residuals1 = np.asarray([angle_residuals[0]])
 
-        semantic_class_index = np.asarray([0])
         label_mask = np.asarray([1])
 
         vote_labels = np.asarray([[a[0], a[1], a[2], a[0], a[1], a[2], a[0], a[1], a[2]] for a in votes])
@@ -282,8 +284,8 @@ def get_sem_cls_statistics():
 
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
-    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=False, split_set='train')
-    sample = d[3]
+    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=False, split_set='val')
+    sample = d[1]
     #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
