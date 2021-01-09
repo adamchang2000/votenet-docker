@@ -408,7 +408,7 @@ def evaluate_one_epoch():
             ap_calculator.step(batch_pred_map_cls, batch_gt_map_cls)
 
             # Dump evaluation results for visualization
-            if FLAGS.dump_results and batch_idx == 0 and EPOCH_CNT %10 == 0 and sample_iter == 0:
+            if FLAGS.dump_results and batch_idx == 0 and sample_iter == 0:
                 MODEL.dump_results(end_points, DUMP_DIR, DATASET_CONFIG) 
 
             sample_iter += BATCH_CHUNK_SIZE
