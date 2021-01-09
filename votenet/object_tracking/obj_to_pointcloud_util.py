@@ -258,7 +258,7 @@ def main():
 
 	#o3d.visualization.draw_geometries([pcld, bb])
 
-	pcld, bb, votes, axis_angles, theta = get_perspective_data_from_model_seed(3, model, args.points, args.sample_strategy)
+	pcld, bb, axis_angles, theta = get_perspective_data_from_model_seed(3, model, args.points, args.sample_strategy)
 
 	bb = o3d.geometry.OrientedBoundingBox.create_from_axis_aligned_bounding_box(bb)
 

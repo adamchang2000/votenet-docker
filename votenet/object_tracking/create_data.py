@@ -4,14 +4,14 @@ import open3d as o3d
 from obj_to_pointcloud_util import *
 
 def main():
-	model_path = 'medical/textured_medical_patterns_filledin.ply'
+	model_path = 'medical/medical_bulbs.ply'
 	#model_path = 'medical/medical_textured.obj'
 	output_path = 'model_data/'
 	scene_path = 'scenes_azure/'
-	number_of_samples = 100
-	training_number = 80
-	testing_number = 20
-	val_number = 0
+	number_of_samples = 400
+	training_number = 250
+	testing_number = 149
+	val_number = 1
 	num_points = 3000
 	scale_output_pcld = 1.0
 	scale = 0.001 * scale_output_pcld
@@ -63,8 +63,8 @@ def main():
 		# total_votes[:votes.shape[0]] = votes
 
 		#single channel, 1 or 0, after adaptive threshold filter
-		#scene_point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(scene_pts, scene_colors)])
-		scene_point_cloud = np.array([[0, 0, 0, 0]])
+		scene_point_cloud = np.asarray([[p[0], p[1], p[2], 0] for p,c in zip(scene_pts, scene_colors)])
+		#scene_point_cloud = np.array([[0, 0, 0, 0]])
 		model_point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(model_points, model_colors)])
 
 		# vote_mask = np.zeros(combined_points.size)
