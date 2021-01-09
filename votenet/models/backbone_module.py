@@ -148,60 +148,60 @@ class Pointnet2Backbone(nn.Module):
                 npoint=2048,
                 radius=0.05,
                 nsample=64,
-                mlp=[input_feature_dim, 64, 64, 128],
+                mlp=[input_feature_dim, 128, 128, 256],
                 use_xyz=False,
                 normalize_xyz=False,
                 use_relative_xyz=True,
-                dropout=0.5
+                dropout=0.3
             )
 
         self.sa2 = PointnetSAModuleVotes(
                 npoint=1024,
                 radius=0.2,
                 nsample=32,
-                mlp=[128, 128, 128, 256],
-                use_xyz=False,
+                mlp=[256, 256, 256, 512],
+                use_xyz=True,
                 normalize_xyz=False,
-                use_relative_xyz=True,
-                dropout=0.5
+                use_relative_xyz=False,
+                dropout=0.3
             )
 
         self.sa3 = PointnetSAModuleVotes(
                 npoint=512,
                 radius=0.5,
                 nsample=16,
-                mlp=[256, 128, 128, 256],
-                use_xyz=False,
+                mlp=[512, 256, 256, 512],
+                use_xyz=True,
                 normalize_xyz=False,
-                use_relative_xyz=True,
-                dropout=0.5
+                use_relative_xyz=False,
+                dropout=0.3
             )
 
         self.sa4 = PointnetSAModuleVotes(
                 npoint=256,
                 radius=1.0,
                 nsample=16,
-                mlp=[256, 128, 128, 256],
-                use_xyz=False,
+                mlp=[512, 256, 256, 512],
+                use_xyz=True,
                 normalize_xyz=False,
-                use_relative_xyz=True,
-                dropout=0.5
+                use_relative_xyz=False,
+                dropout=0.3
             )
 
-        self.sa5 = PointnetSAModuleVotes(
-                npoint=256,
-                radius=1.5,
-                nsample=16,
-                mlp=[256, 128, 128, 256],
-                use_xyz=False,
-                normalize_xyz=False,
-                use_relative_xyz=True,
-                dropout=0.5
-            )
+        # self.sa5 = PointnetSAModuleVotes(
+        #         npoint=256,
+        #         radius=1.5,
+        #         nsample=16,
+        #         mlp=[256, 128, 128, 256],
+        #         use_xyz=True,
+        #         normalize_xyz=False,
+        #         use_relative_xyz=False,
+        #         dropout=0.3
+        #     )
 
-        self.fp1 = PointnetFPModule(mlp=[256+256,256,256])
-        self.fp2 = PointnetFPModule(mlp=[256+256,256,256])
-        self.fp3 = PointnetFPModule(mlp=[256+256,256,256]) 
+        self.fp1 = PointnetFPModule(mlp=[512+512,512,512])
+        self.fp2 = PointnetFPModule(mlp=[512+512,512,512])
+        #self.fp3 = PointnetFPModule(mlp=[256+256,256,256]) 
 
     def _break_up_pc(self, pc):
         xyz = pc[..., 0:3].contiguous()
@@ -256,14 +256,14 @@ class Pointnet2Backbone(nn.Module):
         end_points['sa4_xyz'] = xyz
         end_points['sa4_features'] = features
 
-        xyz, features, fps_inds = self.sa5(xyz, features) # this fps_inds is just 0,1,...,255
-        end_points['sa5_xyz'] = xyz
-        end_points['sa5_features'] = features
+        # xyz, features, fps_inds = self.sa5(xyz, features) # this fps_inds is just 0,1,...,255
+        # end_points['sa5_xyz'] = xyz
+        # end_points['sa5_features'] = features
 
         # --------- 2 FEATURE UPSAMPLING LAYERS --------
-        features = self.fp1(end_points['sa4_xyz'], end_points['sa5_xyz'], end_points['sa4_features'], end_points['sa5_features'])
-        features = self.fp2(end_points['sa3_xyz'], end_points['sa4_xyz'], end_points['sa3_features'], features)
-        features = self.fp3(end_points['sa2_xyz'], end_points['sa3_xyz'], end_points['sa2_features'], features)
+        #features = self.fp1(end_points['sa4_xyz'], end_points['sa5_xyz'], end_points['sa4_features'], end_points['sa5_features'])
+        features = self.fp1(end_points['sa3_xyz'], end_points['sa4_xyz'], end_points['sa3_features'], end_points['sa4_features'])
+        features = self.fp2(end_points['sa2_xyz'], end_points['sa3_xyz'], end_points['sa2_features'], features)
         end_points['fp2_features'] = features
         end_points['fp2_xyz'] = end_points['sa2_xyz']
         num_seed = end_points['fp2_xyz'].shape[1]

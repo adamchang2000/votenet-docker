@@ -3,5 +3,5 @@ python3.7 eval.py --dataset obj --modelpath=object_tracking/model_data/ --num_po
 python track.py --model_path "C:\Users\adam2\Desktop\votenet-docker\votenet\object_tracking\medical\choukemoduan_v0.obj" --network_path 
 
 
-python train.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=3000 --channels 1 --no_height --batch_size=1
+python train.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=3000 --channels 1 --no_height --batch_size=1 --dump_dir=dump --dump_results
 python eval.py --dataset obj --modelpath=object_tracking/model_data/ --num_point=3000 --channels 1 --no_height --batch_size=1 --checkpoint_path=log/checkpoint.tar --dump_dir=dump

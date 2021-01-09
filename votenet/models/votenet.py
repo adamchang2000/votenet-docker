@@ -60,11 +60,11 @@ class VoteNet(nn.Module):
         self.backbone_net = Pointnet2Backbone(input_feature_dim=self.input_feature_dim)
 
         # Hough voting
-        self.vgen = VotingModule(self.vote_factor, 256)
+        self.vgen = VotingModule(self.vote_factor, 512)
 
         # Vote aggregation and detection
         self.pnet = ProposalModule(num_class, num_heading_bin, num_size_cluster,
-            mean_size_arr, num_proposal, sampling)
+            mean_size_arr, num_proposal, sampling, seed_feat_dim=512)
 
     def forward(self, inputs):
         """ Forward pass of the network

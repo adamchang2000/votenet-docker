@@ -149,6 +149,7 @@ CONFIG_DICT = {'remove_empty_box': (not FLAGS.faster_eval), 'use_3d_nms': True, 
 
 def evaluate_one_epoch():
     stat_dict = {}
+    sample_count = 0
     ap_calculator_list = [APCalculator(iou_thresh, DATASET_CONFIG.class2type) \
         for iou_thresh in AP_IOU_THRESHOLDS]
     net.eval() # set model to eval mode (for bn and dp)
@@ -160,6 +161,7 @@ def evaluate_one_epoch():
         
         # Forward pass
         inputs = {'point_clouds': batch_data_label['point_clouds']}
+        sample_count += len(inputs['point_clouds'])
         with torch.no_grad():
             end_points = net(inputs)
 
@@ -184,9 +186,14 @@ def evaluate_one_epoch():
         if batch_idx == 0:
             MODEL.dump_results(end_points, DUMP_DIR, DATASET_CONFIG)
 
+            # Log statistics
+            for key in sorted(stat_dict.keys()):
+                log_string('dump eval mean %s: %f'%(key, stat_dict[key]/sample_count))
+
     # Log statistics
     for key in sorted(stat_dict.keys()):
-        log_string('eval mean %s: %f'%(key, stat_dict[key]/(float(batch_idx+1))))
+        log_string('eval mean %s: %f'%(key, stat_dict[key]/sample_count))
+    print('SAMPLE COUNT ', sample_count)
 
     # Evaluate average precision
     for i, ap_calculator in enumerate(ap_calculator_list):
@@ -195,7 +202,7 @@ def evaluate_one_epoch():
         for key in metrics_dict:
             log_string('eval %s: %f'%(key, metrics_dict[key]))
 
-    mean_loss = stat_dict['loss']/float(batch_idx+1)
+    mean_loss = stat_dict['loss']/sample_count
     return mean_loss
 
 
