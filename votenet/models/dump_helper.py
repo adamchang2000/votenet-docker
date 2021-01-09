@@ -123,16 +123,6 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
     seed_gt_votes += end_points['seed_xyz'].repeat(1,1,3)
     seed_gt_votes = seed_gt_votes.cpu().numpy()
 
-    print(seed_gt_votes.shape)
-    print(seed_gt_votes[0][0])
-    print(seed_gt_votes[0][2])
-    print(seed_gt_votes[0][3])
-    print(seed_gt_votes[0][4])
-    print(seed_gt_votes[0][5])
-    print(seed_gt_votes[0][6])
-    print(seed_gt_votes[0][7])
-
-
 
     gt_center = end_points['center_label'].cpu().numpy() # (B,MAX_NUM_OBJ,3)
     gt_mask = end_points['box_label_mask'].cpu().numpy() # B,K2
