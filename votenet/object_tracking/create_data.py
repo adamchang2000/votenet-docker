@@ -2,6 +2,7 @@ import argparse, os, sys
 import numpy as np
 import open3d as o3d
 from obj_to_pointcloud_util import *
+from datetime import datetime
 
 def main():
 	model_path = 'medical/medical_bulbs.ply'
@@ -40,7 +41,7 @@ def main():
 	for i in range(number_of_samples):
 
 		if i % 50 == 0:
-			print('creating sample ', i, end='\r')
+			print('creating sample ', i, datetime.now(), end='\r')
 
 		scene_index = np.random.randint(89)
 		scene = scenes[scene_index]
