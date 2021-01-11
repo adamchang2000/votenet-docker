@@ -207,13 +207,11 @@ def get_perspective_data_from_model(model, xyz, axis_angles, theta, points=20000
 			factor += 2
 		elif factor > 20: #less than 5% of the object is showing
 			pointcloud = sample_points(model, points, sample_strategy)
-			lst = np.array([i for i in range(points)])
+			#lst = np.array([i for i in range(points)])
 		else:
-			break
-
-	np.random.shuffle(lst)
-	lst = np.array(lst[:points])
-	pointcloud = pointcloud.select_down_sample(lst)
+			np.random.shuffle(lst)
+			lst = np.array(lst[:points])
+			pointcloud = pointcloud.select_down_sample(lst)
 
 	#insert noise into model
 	#pointcloud = augment_pointcloud(pointcloud)
