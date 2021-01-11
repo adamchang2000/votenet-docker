@@ -102,11 +102,11 @@ class OBJDetectionVotesDataset(Dataset):
 
             rot = R.from_rotvec(axis_angles * theta)
 
-            new_axis_angles = axis_angles + np.random.uniform(-0.2, 0.2, size=3)
-            new_axis_angles /= np.linalg.norm(new_axis_angles)
+            #new_axis_angles = axis_angles + np.random.uniform(-0.2, 0.2, size=3)
+            #new_axis_angles /= np.linalg.norm(new_axis_angles)
 
             #testing only 1dof rotation
-            #new_axis_angles = axis_angles
+            new_axis_angles = axis_angles
 
             #print('dist from new to old ', np.linalg.norm(new_axis_angles - axis_angles))
 
