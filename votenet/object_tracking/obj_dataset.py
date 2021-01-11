@@ -102,8 +102,11 @@ class OBJDetectionVotesDataset(Dataset):
 
             rot = R.from_rotvec(axis_angles * theta)
 
-            new_axis_angles = axis_angles + np.random.uniform(-0.2, 0.2, size=3)
-            new_axis_angles /= np.linalg.norm(new_axis_angles)
+            #new_axis_angles = axis_angles + np.random.uniform(-0.2, 0.2, size=3)
+            #new_axis_angles /= np.linalg.norm(new_axis_angles)
+
+            #testing only 1dof rotation
+            new_axis_angles = axis_angles
 
             #print('dist from new to old ', np.linalg.norm(new_axis_angles - axis_angles))
 
@@ -280,8 +283,8 @@ def get_sem_cls_statistics():
 
 if __name__=='__main__':
     assert (len(sys.argv) == 2)
-    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=False, split_set='val')
-    sample = d[1]
+    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=True, split_set='train')
+    sample = d[0]
     #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
