@@ -229,7 +229,7 @@ def get_perspective_data_from_model_seed(seed, model, points=20000, sample_strat
 	axis_angles /= np.linalg.norm(axis_angles)
 
 	#testing xyz
-	axis_angles = np.array([0., 0., 1.])
+	#axis_angles = np.array([0., 0., 1.])
 
 	theta = np.random.uniform(0, np.pi * 2)
 
