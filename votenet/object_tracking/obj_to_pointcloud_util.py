@@ -149,6 +149,10 @@ def sample_points(model, num_points, sample_strategy):
 			pointcloud = model.sample_points_poisson_disk(num_points)
 
 	elif type(model) == type(o3d.geometry.PointCloud()):
+
+		if num_points > np.array(model.points).shape[0]:
+			return pointcloud
+
 		lst = np.random.choice(np.array(model.points).shape[0], num_points)
 		pointcloud = model.select_down_sample(lst)
 
@@ -207,11 +211,12 @@ def get_perspective_data_from_model(model, xyz, axis_angles, theta, points=20000
 			factor += 2
 		elif factor > 20: #less than 5% of the object is showing
 			pointcloud = sample_points(model, points, sample_strategy)
-			#lst = np.array([i for i in range(points)])
+			break
 		else:
 			np.random.shuffle(lst)
 			lst = np.array(lst[:points])
 			pointcloud = pointcloud.select_down_sample(lst)
+			break
 
 	#insert noise into model
 	#pointcloud = augment_pointcloud(pointcloud)
