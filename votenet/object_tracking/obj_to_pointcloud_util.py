@@ -205,6 +205,9 @@ def get_perspective_data_from_model(model, xyz, axis_angles, theta, points=20000
 
 		if len(lst) < points:
 			factor += 2
+		elif factor > 20: #less than 5% of the object is showing
+			pointcloud = sample_points(model, points, sample_strategy)
+			lst = np.array([i for i in range(points)])
 		else:
 			break
 
