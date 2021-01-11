@@ -151,10 +151,11 @@ def sample_points(model, num_points, sample_strategy):
 	elif type(model) == type(o3d.geometry.PointCloud()):
 
 		if num_points > np.array(model.points).shape[0]:
-			return pointcloud
-
-		lst = np.random.choice(np.array(model.points).shape[0], num_points)
-		pointcloud = model.select_down_sample(lst)
+			lst = np.array([i for i in range(np.array(model.points).shape[0])])
+			pointcloud = model.select_down_sample(lst)
+		else:
+			lst = np.random.choice(np.array(model.points).shape[0], num_points)
+			pointcloud = model.select_down_sample(lst)
 
 	else:
 		print('only can sample points from trianglemesh or pointcloud, not %s' % repr(type(model)))
@@ -208,7 +209,7 @@ def get_perspective_data_from_model(model, xyz, axis_angles, theta, points=20000
 		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 50)
 
 		if len(lst) < points:
-			factor += 2
+			factor += 5
 		elif factor > 20: #less than 5% of the object is showing
 			pointcloud = sample_points(model, points, sample_strategy)
 			break
