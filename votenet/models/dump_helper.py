@@ -122,7 +122,8 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
     seed_gt_votes = torch.gather(end_points['vote_label'], 1, seed_inds_expand)
     seed_gt_votes += end_points['seed_xyz'].repeat(1,1,3)
     seed_gt_votes = seed_gt_votes.cpu().numpy()
-
+    seed_gt_votes_mask = seed_gt_votes_mask.cpu().numpy()
+    seed_gt_votes = seed_gt_votes[:,seed_gt_votes_mask[0] == 1]
 
     gt_center = end_points['center_label'].cpu().numpy() # (B,MAX_NUM_OBJ,3)
     gt_mask = end_points['box_label_mask'].cpu().numpy() # B,K2
