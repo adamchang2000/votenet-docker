@@ -292,6 +292,18 @@ def get_loss(end_points, config):
     obj_acc = torch.sum((obj_pred_val==objectness_label.long()).float()*objectness_mask)/(torch.sum(objectness_mask)+1e-6)
     end_points['obj_acc'] = obj_acc
 
+    objectness_label_one = torch.clone(objectness_label)
+    objectness_label_one[objectness_label_one == 0] = -1
+
+    objectness_label_zero = torch.clone(objectness_label)
+    objectness_label_zero[objectness_label_zero == 1] = -1
+
+    obj_acc_one = torch.sum((obj_pred_val==objectness_label_one.long()).float()*objectness_mask)/(torch.sum(objectness_mask)+1e-6)
+    end_points['obj_acc_one'] = obj_acc_one
+
+    obj_acc_zero = torch.sum((obj_pred_val==objectness_label_zero.long()).float()*objectness_mask)/(torch.sum(objectness_mask)+1e-6)
+    end_points['obj_acc_zero'] = obj_acc_zero
+
     end_points['obj_pred_val'] = obj_pred_val
 
     return loss, end_points
