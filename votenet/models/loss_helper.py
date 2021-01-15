@@ -228,7 +228,7 @@ def compute_rotation_loss_reprojection(end_points, object_assignment, objectness
 
     gt_rot = torch.stack((gt_rot_row0, gt_rot_row1, gt_rot_row2), 2)
 
-    model_pcld = end_points['model'].transpose(1, 2)
+    model_pcld = end_points['model'][0].transpose(0, 1)
 
     pred_pcld = torch.matmul(pred_rot, model_pcld).transpose(2, 3)
     gt_pcld = torch.matmul(gt_rot, model_pcld).transpose(2, 3)
