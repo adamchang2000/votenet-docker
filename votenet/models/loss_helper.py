@@ -233,7 +233,9 @@ def compute_rotation_loss_reprojection(end_points, object_assignment, objectness
     pred_pcld = torch.matmul(pred_rot, model_pcld).transpose(2, 3)
     gt_pcld = torch.matmul(gt_rot, model_pcld).transpose(2, 3)
 
-    rotation_loss_corr = torch.dist(pred_pcld, gt_pcld.repeat(1, pred_pcld.shape[1], 1, 1), 1)
+    pc_diff = (pred_pcld - gt_pcld.repeat(1, pred_pcld.shape[1], 1, 1))**2
+
+    rotation_loss_corr = torch.sum(torch.sqrt(torch.sum(pc_diff, dim=-1)))
 
     pred_pcld_flattened = pred_pcld.contiguous().view(pred_pcld.shape[0], -1, 3)
     gt_pcld_flattened = gt_pcld.contiguous().view(gt_pcld.shape[0], -1, 3)
@@ -359,7 +361,7 @@ def get_loss(end_points, config):
     #end_points['size_cls_loss'] = size_cls_loss
     #end_points['size_reg_loss'] = size_reg_loss
     #end_points['sem_cls_loss'] = sem_cls_loss
-    box_loss = center_loss + 0.01*rotation_loss_corr + 0.01*rotation_loss_nn #put everythign on similar scales
+    box_loss = center_loss + rotation_loss_corr + rotation_loss_nn
     end_points['box_loss'] = box_loss
 
     # Final loss function
