@@ -314,7 +314,7 @@ def plot_grad_flow(named_parameters, i):
     plt.savefig('grad_flow' + str(i) + '.png')
 
 
-BATCH_CHUNK_SIZE = 8
+BATCH_CHUNK_SIZE = 12
 
 def train_one_epoch():
     global ITER_CNT
