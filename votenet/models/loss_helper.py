@@ -14,8 +14,8 @@ sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 from nn_distance import nn_distance, huber_loss
 from scipy.spatial.transform import Rotation as R
 
-FAR_THRESHOLD = 0.25
-NEAR_THRESHOLD = 0.2
+FAR_THRESHOLD = 0.12
+NEAR_THRESHOLD = 0.1
 GT_VOTE_FACTOR = 3 # number of GT votes per point
 OBJECTNESS_CLS_WEIGHTS = [0.09,0.91] # put larger weights on positive objectness, #think about relationship between object_cls_weights and neg/pos_ratio
 
@@ -333,6 +333,11 @@ def get_loss(end_points, config):
         end_points: dict
     """
 
+    #LOSS MULTIPLIERS
+    VOTE_LOSS_MULTIPLIER = 1000 #votes are not even close to the object, different parts of the scene are voting for the object lol
+    OBJECTNESS_LOSS_MULTIPLIER = 0.5
+    BOX_LOSS_MULTIPLIER = 1
+
     # Vote loss
     vote_loss = compute_vote_loss(end_points)
     end_points['vote_loss'] = vote_loss
@@ -365,7 +370,7 @@ def get_loss(end_points, config):
     end_points['box_loss'] = box_loss
 
     # Final loss function
-    loss = vote_loss + 0.5*objectness_loss + box_loss
+    loss = VOTE_LOSS_MULTIPLIER*vote_loss + OBJECTNESS_LOSS_MULTIPLIER*objectness_loss + BOX_LOSS_MULTIPLIER*box_loss
     loss *= 10
     end_points['loss'] = loss
 
