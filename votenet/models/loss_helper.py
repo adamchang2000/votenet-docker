@@ -2,7 +2,7 @@
 # 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
+import time
 import torch
 import torch.nn as nn
 import numpy as np
@@ -12,6 +12,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 from nn_distance import nn_distance, huber_loss
+from scipy.spatial.transform import Rotation as R
 
 FAR_THRESHOLD = 0.25
 NEAR_THRESHOLD = 0.2
@@ -84,6 +85,7 @@ def compute_objectness_loss(end_points):
     B = gt_center.shape[0]
     K = aggregated_vote_xyz.shape[1]
     K2 = gt_center.shape[1]
+
     dist1, ind1, dist2, _ = nn_distance(aggregated_vote_xyz, gt_center) # dist1: BxK, dist2: BxK2
 
     # Generate objectness label and mask
@@ -108,61 +110,139 @@ def compute_objectness_loss(end_points):
 
     return objectness_loss, objectness_label, objectness_mask, object_assignment
 
-def compute_rotation_loss(end_points, object_assignment, objectness_label, num_heading_bin, batch_size, n=1):
+# def compute_rotation_loss(end_points, object_assignment, objectness_label, num_heading_bin, batch_size, n=1):
 
-    lst = list(range(1, n+1))
-    lst[0] = ''
+#     lst = list(range(1, n+1))
+#     lst[0] = ''
 
-    heading_class_loss = 0
-    heading_residual_normalized_loss = 0
+#     heading_class_loss = 0
+#     heading_residual_normalized_loss = 0
 
-    for suff in lst:
-        heading_scores_key = 'heading_scores' + str(suff)
-        heading_residuals_key = 'heading_residuals_normalized' + str(suff)
+#     for suff in lst:
+#         heading_scores_key = 'heading_scores' + str(suff)
+#         heading_residuals_key = 'heading_residuals_normalized' + str(suff)
 
-        heading_class_label_key = 'heading_class_label' + str(suff)
-        heading_residual_label_key = 'heading_residual_label' + str(suff)
+#         heading_class_label_key = 'heading_class_label' + str(suff)
+#         heading_residual_label_key = 'heading_residual_label' + str(suff)
 
-        # Compute heading loss
-        #print('shapes ', end_points['heading_class_label'].shape, object_assignment.shape)
-        heading_class_label = torch.gather(end_points[heading_class_label_key], 1, object_assignment) # select (B,K) from (B,K2)
-        criterion_heading_class = nn.CrossEntropyLoss(reduction='none')
-        heading_class_loss_temp = criterion_heading_class(end_points[heading_scores_key].transpose(2,1), heading_class_label) # (B,K)
-        if heading_class_loss == 0:
-            heading_class_loss = torch.sum(heading_class_loss_temp * objectness_label)/(torch.sum(objectness_label)+1e-6)
-        else:
-            heading_class_loss += torch.sum(heading_class_loss_temp * objectness_label)/(torch.sum(objectness_label)+1e-6)
+#         # Compute heading loss
+#         #print('shapes ', end_points['heading_class_label'].shape, object_assignment.shape)
+#         heading_class_label = torch.gather(end_points[heading_class_label_key], 1, object_assignment) # select (B,K) from (B,K2)
+#         criterion_heading_class = nn.CrossEntropyLoss(reduction='none')
+#         heading_class_loss_temp = criterion_heading_class(end_points[heading_scores_key].transpose(2,1), heading_class_label) # (B,K)
+#         if heading_class_loss == 0:
+#             heading_class_loss = torch.sum(heading_class_loss_temp * objectness_label)/(torch.sum(objectness_label)+1e-6)
+#         else:
+#             heading_class_loss += torch.sum(heading_class_loss_temp * objectness_label)/(torch.sum(objectness_label)+1e-6)
 
-        heading_residual_label = torch.gather(end_points[heading_residual_label_key], 1, object_assignment) # select (B,K) from (B,K2)
-        heading_residual_normalized_label = heading_residual_label / (np.pi/num_heading_bin)
+#         heading_residual_label = torch.gather(end_points[heading_residual_label_key], 1, object_assignment) # select (B,K) from (B,K2)
+#         heading_residual_normalized_label = heading_residual_label / (np.pi/num_heading_bin)
 
-        # Ref: https://discuss.pytorch.org/t/convert-int-into-one-hot-format/507/3
-        heading_label_one_hot = torch.cuda.FloatTensor(batch_size, heading_class_label.shape[1], num_heading_bin).zero_()
-        heading_label_one_hot.scatter_(2, heading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
-        heading_residual_normalized_loss_temp = huber_loss(torch.sum(end_points[heading_residuals_key]*heading_label_one_hot, -1) - heading_residual_normalized_label, delta=1.0) # (B,K)
-        if heading_residual_normalized_loss == 0:
-            heading_residual_normalized_loss = torch.sum(heading_residual_normalized_loss_temp*objectness_label)/(torch.sum(objectness_label)+1e-6)
-        else:
-            heading_residual_normalized_loss += torch.sum(heading_residual_normalized_loss_temp*objectness_label)/(torch.sum(objectness_label)+1e-6)
+#         # Ref: https://discuss.pytorch.org/t/convert-int-into-one-hot-format/507/3
+#         heading_label_one_hot = torch.cuda.FloatTensor(batch_size, heading_class_label.shape[1], num_heading_bin).zero_()
+#         heading_label_one_hot.scatter_(2, heading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
+#         heading_residual_normalized_loss_temp = huber_loss(torch.sum(end_points[heading_residuals_key]*heading_label_one_hot, -1) - heading_residual_normalized_label, delta=1.0) # (B,K)
+#         if heading_residual_normalized_loss == 0:
+#             heading_residual_normalized_loss = torch.sum(heading_residual_normalized_loss_temp*objectness_label)/(torch.sum(objectness_label)+1e-6)
+#         else:
+#             heading_residual_normalized_loss += torch.sum(heading_residual_normalized_loss_temp*objectness_label)/(torch.sum(objectness_label)+1e-6)
 
-    # Compute rotation vector loss
+#     # Compute rotation vector loss
+#     pred_rotation_vector = end_points['rotation_vector']
+#     gt_rotation_vector = end_points['rotation_vector_label'][:,:,0:3]
+
+#     print(pred_rotation_vector)
+#     print(gt_rotation_vector)
+
+#     pred_norms = torch.norm(pred_rotation_vector, dim=2).unsqueeze(2).repeat(1, 1, 3)
+
+#     pred_rotation_vector_normalized = pred_rotation_vector / pred_norms
+
+#     dist1, ind1, dist2, _ = nn_distance(pred_rotation_vector_normalized, gt_rotation_vector) # dist1: BxK, dist2: BxK2
+#     #box_label_mask = end_points['box_label_mask']
+#     objectness_label = end_points['objectness_label'].float()
+#     centroid_reg_loss1 = \
+#         torch.sum(dist1*objectness_label)/(torch.sum(objectness_label)+1e-6)
+#     # centroid_reg_loss2 = \
+#     #     torch.sum(dist2*box_label_mask)/(torch.sum(box_label_mask)+1e-6)
+#     rotation_vector_loss = centroid_reg_loss1# + centroid_reg_loss2
+
+#     return heading_class_loss, heading_residual_normalized_loss, rotation_vector_loss
+
+def compute_rotation_loss_reprojection(end_points, object_assignment, objectness_label, num_heading_bin, batch_size):
+    if 'model' not in end_points.keys():
+        print('Need to have the model to calculate reprojection error')
+
     pred_rotation_vector = end_points['rotation_vector']
-    gt_rotation_vector = end_points['rotation_vector_label'][:,:,0:3]
+    pred_theta = end_points['theta']
+
+    gt_rotation_vector = end_points['rotation_vector_label']
+    gt_theta = end_points['theta_label']
 
     pred_norms = torch.norm(pred_rotation_vector, dim=2).unsqueeze(2).repeat(1, 1, 3)
-
     pred_rotation_vector_normalized = pred_rotation_vector / pred_norms
 
-    dist1, ind1, dist2, _ = nn_distance(pred_rotation_vector_normalized, gt_rotation_vector) # dist1: BxK, dist2: BxK2
-    #box_label_mask = end_points['box_label_mask']
-    objectness_label = end_points['objectness_label'].float()
-    centroid_reg_loss1 = \
-        torch.sum(dist1*objectness_label)/(torch.sum(objectness_label)+1e-6)
-    # centroid_reg_loss2 = \
-    #     torch.sum(dist2*box_label_mask)/(torch.sum(box_label_mask)+1e-6)
-    rotation_vector_loss = centroid_reg_loss1# + centroid_reg_loss2
+    pred_c = torch.cos(pred_theta)
+    pred_s = torch.sin(pred_theta)
+    pred_t = 1. - pred_c
+    pred_x = pred_rotation_vector_normalized[:,:,0].unsqueeze(-1)
+    pred_y = pred_rotation_vector_normalized[:,:,1].unsqueeze(-1)
+    pred_z = pred_rotation_vector_normalized[:,:,2].unsqueeze(-1)
 
-    return heading_class_loss, heading_residual_normalized_loss, rotation_vector_loss
+    gt_c = torch.cos(gt_theta)
+    gt_s = torch.sin(gt_theta)
+    gt_t = 1. - gt_c
+    gt_x = gt_rotation_vector[:,:,0]
+    gt_y = gt_rotation_vector[:,:,1]
+    gt_z = gt_rotation_vector[:,:,2]
+
+    pred_R00 = pred_t*pred_x*pred_x + pred_c
+    pred_R01 = pred_t*pred_x*pred_y - pred_z*pred_s
+    pred_R02 = pred_t*pred_x*pred_z + pred_y*pred_s
+    pred_R10 = pred_t*pred_x*pred_y + pred_z*pred_s
+    pred_R11 = pred_t*pred_y*pred_y + pred_c
+    pred_R12 = pred_t*pred_y*pred_z - pred_x*pred_s
+    pred_R20 = pred_t*pred_x*pred_z - pred_y*pred_s
+    pred_R21 = pred_t*pred_y*pred_z + pred_x*pred_s
+    pred_R22 = pred_t*pred_z*pred_z + pred_c
+
+    gt_R00 = gt_t*gt_x*gt_x + gt_c
+    gt_R01 = gt_t*gt_x*gt_y - gt_z*gt_s
+    gt_R02 = gt_t*gt_x*gt_z + gt_y*gt_s
+    gt_R10 = gt_t*gt_x*gt_y + gt_z*gt_s
+    gt_R11 = gt_t*gt_y*gt_y + gt_c
+    gt_R12 = gt_t*gt_y*gt_z - gt_x*gt_s
+    gt_R20 = gt_t*gt_x*gt_z - gt_y*gt_s
+    gt_R21 = gt_t*gt_y*gt_z + gt_x*gt_s
+    gt_R22 = gt_t*gt_z*gt_z + gt_c
+
+    pred_rot_row0 = torch.stack((pred_R00, pred_R01, pred_R02), -1).squeeze(2)
+    pred_rot_row1 = torch.stack((pred_R10, pred_R11, pred_R12), -1).squeeze(2)
+    pred_rot_row2 = torch.stack((pred_R20, pred_R21, pred_R22), -1).squeeze(2)
+
+    pred_rot = torch.stack((pred_rot_row0, pred_rot_row1, pred_rot_row2), 2)
+
+    gt_rot_row0 = torch.stack((gt_R00, gt_R01, gt_R02), -1).squeeze(2)
+    gt_rot_row1 = torch.stack((gt_R10, gt_R11, gt_R12), -1).squeeze(2)
+    gt_rot_row2 = torch.stack((gt_R20, gt_R21, gt_R22), -1).squeeze(2)
+
+    gt_rot = torch.stack((gt_rot_row0, gt_rot_row1, gt_rot_row2), 2)
+
+    model_pcld = end_points['model'].transpose(1, 2)
+
+    pred_pcld = torch.matmul(pred_rot, model_pcld).transpose(2, 3)
+    gt_pcld = torch.matmul(gt_rot, model_pcld).transpose(2, 3)
+
+    rotation_loss_corr = torch.dist(pred_pcld, gt_pcld.repeat(1, pred_pcld.shape[1], 1, 1), 1)
+
+    pred_pcld_flattened = pred_pcld.contiguous().view(pred_pcld.shape[0], -1, 3)
+    gt_pcld_flattened = gt_pcld.contiguous().view(gt_pcld.shape[0], -1, 3)
+
+    dist1, ind1, dist2, _ = nn_distance(pred_pcld_flattened, gt_pcld_flattened) # dist1: BxK, dist2: BxK2
+    rotation_loss_nn = torch.sum(torch.sqrt(dist1+1e-6))
+
+    return rotation_loss_corr, rotation_loss_nn
+
 
 def compute_box_and_sem_cls_loss(end_points, config):
     """ Compute 3D bounding box and semantic classification loss.
@@ -199,7 +279,7 @@ def compute_box_and_sem_cls_loss(end_points, config):
         torch.sum(dist2*box_label_mask)/(torch.sum(box_label_mask)+1e-6)
     center_loss = centroid_reg_loss1 + centroid_reg_loss2
 
-    heading_class_loss, heading_residual_normalized_loss, rotation_vector_loss = compute_rotation_loss(end_points, object_assignment, objectness_label, num_heading_bin, batch_size)
+    rotation_loss_corr, rotation_loss_nn = compute_rotation_loss_reprojection(end_points, object_assignment, objectness_label, num_heading_bin, batch_size)
 
     # Compute size loss
     #size_class_label = torch.gather(end_points['size_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
@@ -225,7 +305,7 @@ def compute_box_and_sem_cls_loss(end_points, config):
     #sem_cls_loss = criterion_sem_cls(end_points['sem_cls_scores'].transpose(2,1), sem_cls_label) # (B,K)
     #sem_cls_loss = torch.sum(sem_cls_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
 
-    return center_loss, heading_class_loss, heading_residual_normalized_loss, rotation_vector_loss
+    return center_loss, rotation_loss_corr, rotation_loss_nn
 
 def get_loss(end_points, config):
     """ Loss functions
@@ -269,16 +349,17 @@ def get_loss(end_points, config):
         torch.sum(objectness_mask.float())/float(total_num_proposal) - end_points['pos_ratio']
 
     # Box loss and sem cls loss
-    center_loss, heading_cls_loss, heading_reg_loss, rotation_vector_loss = \
+    center_loss, rotation_loss_corr, rotation_loss_nn = \
         compute_box_and_sem_cls_loss(end_points, config)
     end_points['center_loss'] = center_loss
-    end_points['heading_cls_loss'] = heading_cls_loss
-    end_points['heading_reg_loss'] = heading_reg_loss
-    end_points['rotation_vector_loss'] = rotation_vector_loss
+    #end_points['heading_cls_loss'] = heading_cls_loss
+    #end_points['heading_reg_loss'] = heading_reg_loss
+    end_points['rotation_loss_corr'] = rotation_loss_corr
+    end_points['rotation_loss_nn'] = rotation_loss_nn
     #end_points['size_cls_loss'] = size_cls_loss
     #end_points['size_reg_loss'] = size_reg_loss
     #end_points['sem_cls_loss'] = sem_cls_loss
-    box_loss = center_loss + 0.1*heading_cls_loss + heading_reg_loss + rotation_vector_loss
+    box_loss = center_loss + 0.01*rotation_loss_corr + 0.01*rotation_loss_nn #put everythign on similar scales
     end_points['box_loss'] = box_loss
 
     # Final loss function

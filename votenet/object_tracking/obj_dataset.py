@@ -41,15 +41,23 @@ MEAN_COLOR_RGB = np.array([0.,0.,0.]) # sunrgbd color is in 0~1
 MEAN_EXTRA_CHANNELS = np.array([0.])
 
 class OBJDetectionVotesDataset(Dataset):
-    def __init__(self, model_path, split_set='train', num_points=25000, use_color=False, extra_channels=0, augment=True):
+
+    def load_model(self, model_path):
+        model = convert_file_to_model(model_path, scale = 0.001)
+        model_pcld = sample_points(model, num_points=100)
+
+        self.model_pcld = np.array(model_pcld.points).astype(np.float32)
+
+    def __init__(self, model_path, data_path, split_set='train', num_points=25000, use_color=False, extra_channels=0, augment=True):
 
         #assert(num_points<=100000)
 
-        assert(os.path.isdir(model_path))
-        assert(os.path.exists(os.path.join(model_path, split_set + '_samples.npz')))
 
-        self.model_path = model_path
-        self.samples = np.load(os.path.join(model_path, split_set + '_samples.npz'))['samples']
+        assert(os.path.isdir(data_path))
+        assert(os.path.exists(os.path.join(data_path, split_set + '_samples.npz')))
+
+        self.data_path = data_path
+        self.samples = np.load(os.path.join(data_path, split_set + '_samples.npz'))['samples']
         self.num_points = num_points
         self.use_color = use_color
         self.extra_channels = extra_channels
@@ -63,6 +71,9 @@ class OBJDetectionVotesDataset(Dataset):
             print("WARNING, AUGMENTATION OFF FOR TRAINING")
 
         print(split_set, augment)
+
+        assert(os.path.exists(model_path))
+        self.model = self.load_model(model_path)
        
     def __len__(self):
         return len(self.samples)
@@ -91,7 +102,7 @@ class OBJDetectionVotesDataset(Dataset):
         #bb needs to be converted as well 
         #votes are numpy array
 
-        data = np.load(os.path.join(self.model_path, str(sample_num) + '_data.npz'))
+        data = np.load(os.path.join(self.data_path, str(sample_num) + '_data.npz'))
         scene_point_cloud = data['scene_point_cloud']
         model_point_cloud = data['model_point_cloud']
         box3d_centers = data['box3d_centers']
@@ -202,15 +213,16 @@ class OBJDetectionVotesDataset(Dataset):
 
         
         #angle_class_and_residuals = [DC.angle2class(euler_angles[2])]
-        angle_class_and_residuals = [DC.angle2class(theta)]
+        #angle_class_and_residuals = [DC.angle2class(theta)]
 
         rotation_vector = np.asarray([axis_angles])
+        theta = np.asarray([theta])
 
-        angle_classes = np.asarray([x[0] for x in angle_class_and_residuals])
-        angle_residuals = np.asarray([x[1] for x in angle_class_and_residuals])
+        #angle_classes = np.asarray([x[0] for x in angle_class_and_residuals])
+        #angle_residuals = np.asarray([x[1] for x in angle_class_and_residuals])
 
-        angle_classes1 = np.asarray([angle_classes[0]])
-        angle_residuals1 = np.asarray([angle_residuals[0]])
+        #angle_classes1 = np.asarray([angle_classes[0]])
+        #angle_residuals1 = np.asarray([angle_residuals[0]])
 
         label_mask = np.asarray([1])
 
@@ -219,14 +231,16 @@ class OBJDetectionVotesDataset(Dataset):
         ret_dict = {}
         ret_dict['point_clouds'] = point_cloud.astype(np.float32)
         ret_dict['center_label'] = box3d_centers.astype(np.float32)
-        ret_dict['heading_class_label'] = angle_classes1.astype(np.int64)
-        ret_dict['heading_residual_label'] = angle_residuals1.astype(np.float32)
+        #ret_dict['heading_class_label'] = angle_classes1.astype(np.int64)
+        #ret_dict['heading_residual_label'] = angle_residuals1.astype(np.float32)
+        ret_dict['theta_label'] = theta.astype(np.float32)
         ret_dict['rotation_vector_label'] = rotation_vector.astype(np.float32)
         ret_dict['box_label_mask'] = label_mask.astype(np.float32)
         ret_dict['vote_label'] = vote_labels.astype(np.float32)
         ret_dict['vote_label_mask'] = vote_mask.astype(np.int64)
         ret_dict['scan_idx'] = np.array(sample_num).astype(np.int64)
         ret_dict['max_gt_bboxes'] = np.asarray([])
+        ret_dict['model'] = self.model_pcld
         return ret_dict
 
 def viz_votes(pc, point_votes, point_votes_mask):
@@ -243,7 +257,7 @@ def viz_votes(pc, point_votes, point_votes_mask):
     pc_util.write_ply(pc_obj_voted2, 'pc_obj_voted2.ply')
     pc_util.write_ply(pc_obj_voted3, 'pc_obj_voted3.ply')
 
-def viz_obb(pc, label, mask, angle_class_and_residual, rotation_vector):
+def viz_obb(pc, label, mask, rotation_vector, theta_label):
     """ Visualize oriented bounding box ground truth
     pc: (N,3)
     label: (K,3)  K == MAX_NUM_OBJ
@@ -257,7 +271,7 @@ def viz_obb(pc, label, mask, angle_class_and_residual, rotation_vector):
     K = label.shape[0]
     for i in range(K):
         if mask[i] == 0: continue
-        obb = DC.param2obb(label[i, 0:3], angle_class_and_residual, rotation_vector, 0)
+        obb = DC.param2obb(label[i, 0:3], rotation_vector, theta, 0)
         print(obb)
         oriented_boxes.append(obb)
     #pc_util.write_oriented_bbox(oriented_boxes, 'gt_obbs.ply')
@@ -288,5 +302,4 @@ if __name__=='__main__':
     #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
     viz_votes(sample['point_clouds'], sample['vote_label'], sample['vote_label_mask'])
-    viz_obb(sample['point_clouds'], sample['center_label'], sample['box_label_mask'],
-        [sample['heading_class_label'], sample['heading_residual_label']], sample['rotation_vector_label'])
+    viz_obb(sample['point_clouds'], sample['center_label'], sample['box_label_mask'], sample['rotation_vector_label'], sample['theta_label'])

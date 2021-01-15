@@ -74,7 +74,8 @@ parser.add_argument('--channels', type=int,  default=0, help='Number of extra ch
 parser.add_argument('--use_sunrgbd_v2', action='store_true', help='Use V2 box labels for SUN RGB-D dataset')
 parser.add_argument('--overwrite', action='store_true', help='Overwrite existing log and dump folders.')
 parser.add_argument('--dump_results', action='store_true', help='Dump results.')
-parser.add_argument('--modelpath', help='Path to directory containing .obj, and sample files, for obj training.')
+parser.add_argument('--objdata_path', help='Path to directory containing .npz files for obj training.')
+parser.add_argument('--model_path', help='Path to actual .ply model for obj training.')
 FLAGS = parser.parse_args()
 
 # ------------------------------------------------------------------------- GLOBAL CONFIG BEG
@@ -150,17 +151,21 @@ elif FLAGS.dataset == 'scannet':
 
 elif FLAGS.dataset == 'obj':
 
-    if not FLAGS.modelpath:
-        print('NO FILEPATH FOR OBJ TRAINING')
+    if not FLAGS.objdata_path:
+        print('NO FILEPATH FOR OBJ TRAINING .npz files')
+        sys.exit(1)
+
+    if not FLAGS.model_path:
+        print('NOT FILEPATH FOR OBJ TRAINING .ply file')
         sys.exit(1)
 
     sys.path.append(os.path.join(ROOT_DIR, 'object_tracking'))
     from obj_dataset import OBJDetectionVotesDataset, MAX_NUM_OBJ
     from model_util_obj import OBJDatasetConfig
     DATASET_CONFIG = OBJDatasetConfig()
-    TRAIN_DATASET = OBJDetectionVotesDataset(FLAGS.modelpath, split_set='train', num_points=NUM_POINT,
+    TRAIN_DATASET = OBJDetectionVotesDataset(FLAGS.model_path, FLAGS.objdata_path, split_set='train', num_points=NUM_POINT,
         use_color=FLAGS.use_color, extra_channels=FLAGS.channels, augment=True)
-    TEST_DATASET = OBJDetectionVotesDataset(FLAGS.modelpath, split_set='test', num_points=NUM_POINT,
+    TEST_DATASET = OBJDetectionVotesDataset(FLAGS.model_path, FLAGS.objdata_path, split_set='test', num_points=NUM_POINT,
         use_color=FLAGS.use_color, extra_channels=FLAGS.channels, augment=False)
 else:
     print('Unknown dataset %s. Exiting...'%(FLAGS.dataset))

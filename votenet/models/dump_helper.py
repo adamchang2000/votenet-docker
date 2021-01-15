@@ -50,10 +50,10 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
         aggregated_vote_xyz = end_points['aggregated_vote_xyz'].detach().cpu().numpy()
     objectness_scores = end_points['objectness_scores'].detach().cpu().numpy() # (B,K,2)
     pred_center = end_points['center'].detach().cpu().numpy() # (B,K,3)
-    pred_heading_class = torch.argmax(end_points['heading_scores'], -1) # B,num_proposal
-    pred_heading_residual = torch.gather(end_points['heading_residuals'], 2, pred_heading_class.unsqueeze(-1)) # B,num_proposal,1
-    pred_heading_class = pred_heading_class.detach().cpu().numpy() # B,num_proposal
-    pred_heading_residual = pred_heading_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal
+    # pred_heading_class = torch.argmax(end_points['heading_scores'], -1) # B,num_proposal
+    # pred_heading_residual = torch.gather(end_points['heading_residuals'], 2, pred_heading_class.unsqueeze(-1)) # B,num_proposal,1
+    # pred_heading_class = pred_heading_class.detach().cpu().numpy() # B,num_proposal
+    # pred_heading_residual = pred_heading_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal
 
     # pred_heading_class2 = torch.argmax(end_points['heading_scores2'], -1) # B,num_proposal
     # pred_heading_residual2 = torch.gather(end_points['heading_residuals2'], 2, pred_heading_class2.unsqueeze(-1)) # B,num_proposal,1
@@ -66,6 +66,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
     # pred_heading_residual3 = pred_heading_residual3.squeeze(2).detach().cpu().numpy() # B,num_proposal
 
     pred_rotation_vector = end_points['rotation_vector'].detach().cpu().numpy()
+    pred_theta = end_points['theta'].detach().cpu().numpy()
 
     #pred_size_class = torch.argmax(end_points['size_scores'], -1) # B,num_proposal
     #pred_size_residual = torch.gather(end_points['size_residuals'], 2, pred_size_class.unsqueeze(-1).unsqueeze(-1).repeat(1,1,1,3)) # B,num_proposal,1,3
@@ -94,7 +95,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
             num_proposal = pred_center.shape[1]
             obbs = []
             for j in range(num_proposal):
-                obb = config.param2obb(pred_center[i,j,0:3], [pred_heading_class[i,j], pred_heading_residual[i,j]], pred_rotation_vector[i,j], 0)
+                obb = config.param2obb(pred_center[i,j,0:3], pred_rotation_vector[i,j], pred_theta[i,j], 0)
                 obbs.append(obb)
             if len(obbs)>0:
                 obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
@@ -127,10 +128,11 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
 
     gt_center = end_points['center_label'].cpu().numpy() # (B,MAX_NUM_OBJ,3)
     gt_mask = end_points['box_label_mask'].cpu().numpy() # B,K2
-    gt_heading_class = end_points['heading_class_label'].cpu().numpy() # B,K2
-    gt_heading_residual = end_points['heading_residual_label'].cpu().numpy() # B,K2
+    #gt_heading_class = end_points['heading_class_label'].cpu().numpy() # B,K2
+    #gt_heading_residual = end_points['heading_residual_label'].cpu().numpy() # B,K2
 
     gt_rotation_vector = end_points['rotation_vector_label'].cpu().numpy()
+    gt_theta = end_points['theta_label'].cpu().numpy()
 
     #gt_size_class = end_points['size_class_label'].cpu().numpy() # B,K2
     #gt_size_residual = end_points['size_residual_label'].cpu().numpy() # B,K2,3
@@ -150,7 +152,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
         obbs = []
         for j in range(gt_center.shape[1]):
             if gt_mask[i,j] == 0: continue
-            obb = config.param2obb(gt_center[i,j,0:3], [gt_heading_class[i,j], gt_heading_residual[i,j]], gt_rotation_vector[i,j], 0)
+            obb = config.param2obb(gt_center[i,j,0:3], gt_rotation_vector[i,j], gt_theta[i,j], 0)
             obbs.append(obb)
         if len(obbs)>0:
             obbs = np.vstack(tuple(obbs)) # (num_gt_objects, 7)

@@ -131,7 +131,7 @@ def get_z_vec(model):
 	pcld.points = o3d.utility.Vector3dVector(np.asarray(lst))
 	return pcld
 
-def sample_points(model, num_points, sample_strategy):
+def sample_points(model, num_points, sample_strategy='uniform random'):
 
 	if type(model) == type(o3d.geometry.TriangleMesh()):
 		
@@ -156,7 +156,6 @@ def sample_points(model, num_points, sample_strategy):
 		else:
 			lst = np.random.choice(np.array(model.points).shape[0], num_points)
 			pointcloud = model.select_down_sample(lst)
-
 	else:
 		print('only can sample points from trianglemesh or pointcloud, not %s' % repr(type(model)))
 		exit(1)

@@ -59,12 +59,13 @@ def parse_predictions(end_points, config_dict):
             where j = 0, ..., num of valid detections - 1 from sample input i
     """
     pred_center = end_points['center'] # B,num_proposal,3
-    pred_heading_class = torch.argmax(end_points['heading_scores'], -1) # B,num_proposal
-    pred_heading_residual = torch.gather(end_points['heading_residuals'], 2,
-        pred_heading_class.unsqueeze(-1)) # B,num_proposal,1
-    pred_heading_residual.squeeze_(2)
+    # pred_heading_class = torch.argmax(end_points['heading_scores'], -1) # B,num_proposal
+    # pred_heading_residual = torch.gather(end_points['heading_residuals'], 2,
+    #     pred_heading_class.unsqueeze(-1)) # B,num_proposal,1
+    # pred_heading_residual.squeeze_(2)
 
     pred_rot_vec = end_points['rotation_vector'].detach().cpu().numpy()
+    pred_theta = end_points['theta'].detach().cpu().numpy()
 
     # pred_heading_class2 = torch.argmax(end_points['heading_scores2'], -1) # B,num_proposal
     # pred_heading_residual2 = torch.gather(end_points['heading_residuals2'], 2,
@@ -92,8 +93,8 @@ def parse_predictions(end_points, config_dict):
     pred_center_upright_camera = flip_axis_to_camera(pred_center.detach().cpu().numpy())
     for i in range(bsize):
         for j in range(num_proposal):
-            heading_angle = config_dict['dataset_config'].class2angle(\
-                pred_heading_class[i,j].detach().cpu().numpy(), pred_heading_residual[i,j].detach().cpu().numpy())
+            # heading_angle = config_dict['dataset_config'].class2angle(\
+            #     pred_heading_class[i,j].detach().cpu().numpy(), pred_heading_residual[i,j].detach().cpu().numpy())
 
             # heading_angle2 = config_dict['dataset_config'].class2angle(\
             #     pred_heading_class2[i,j].detach().cpu().numpy(), pred_heading_residual2[i,j].detach().cpu().numpy())
@@ -102,7 +103,7 @@ def parse_predictions(end_points, config_dict):
             #     pred_heading_class3[i,j].detach().cpu().numpy(), pred_heading_residual3[i,j].detach().cpu().numpy())
 
             box_size = config_dict['dataset_config'].meanSize(0)
-            corners_3d_upright_camera = get_3d_box(box_size, heading_angle, pred_rot_vec[i,j], pred_center_upright_camera[i,j,:])
+            corners_3d_upright_camera = get_3d_box(box_size, pred_theta[i,j], pred_rot_vec[i,j], pred_center_upright_camera[i,j,:])
             pred_corners_3d_upright_camera[i,j] = corners_3d_upright_camera
 
     K = pred_center.shape[1] # K==num_proposal
@@ -226,13 +227,14 @@ def parse_groundtruths(end_points, config_dict):
             where j = 0, ..., num of objects - 1 at sample input i
     """
     center_label = end_points['center_label']
-    heading_class_label = end_points['heading_class_label']
-    heading_residual_label = end_points['heading_residual_label']
+    #heading_class_label = end_points['heading_class_label']
+    #heading_residual_label = end_points['heading_residual_label']
     #heading_class_label2 = end_points['heading_class_label2']
     #heading_residual_label2 = end_points['heading_residual_label2']
     #heading_class_label3 = end_points['heading_class_label3']
     #heading_residual_label3 = end_points['heading_residual_label3']
-    rotation_vector_label = end_points['rotation_vector_label']
+    rotation_vector_label = end_points['rotation_vector_label'].detach().cpu().numpy()
+    theta_label = end_points['theta_label'].detach().cpu().numpy()
     # size_class_label = end_points['size_class_label']
     # size_residual_label = end_points['size_residual_label']
     box_label_mask = end_points['box_label_mask']
@@ -245,11 +247,11 @@ def parse_groundtruths(end_points, config_dict):
     for i in range(bsize):
         for j in range(K2):
             if box_label_mask[i,j] == 0: continue
-            heading_angle = config_dict['dataset_config'].class2angle(heading_class_label[i,j].detach().cpu().numpy(), heading_residual_label[i,j].detach().cpu().numpy())
+            #heading_angle = config_dict['dataset_config'].class2angle(heading_class_label[i,j].detach().cpu().numpy(), heading_residual_label[i,j].detach().cpu().numpy())
             #heading_angle2 = config_dict['dataset_config'].class2angle(heading_class_label2[i,j].detach().cpu().numpy(), heading_residual_label2[i,j].detach().cpu().numpy())
             #heading_angle3 = config_dict['dataset_config'].class2angle(heading_class_label3[i,j].detach().cpu().numpy(), heading_residual_label3[i,j].detach().cpu().numpy())
             box_size = config_dict['dataset_config'].meanSize(0)
-            corners_3d_upright_camera = get_3d_box(box_size, heading_angle, rotation_vector_label[i,j].detach().cpu().numpy(), gt_center_upright_camera[i,j,:])
+            corners_3d_upright_camera = get_3d_box(box_size, theta_label[i,j], rotation_vector_label[i,j], gt_center_upright_camera[i,j,:])
             gt_corners_3d_upright_camera[i,j] = corners_3d_upright_camera
 
     batch_gt_map_cls = []

@@ -67,18 +67,13 @@ class OBJDatasetConfig(object):
             angle = angle - 2*np.pi
         return angle
 
-    def param2obb(self, center, heading_class_and_residual, rotation_vector, size_class):
-
-        heading_angle = self.class2angle(heading_class_and_residual[0], heading_class_and_residual[1])
-        #print(heading_classes_and_residuals)
-        #print(heading_angle)
-
+    def param2obb(self, center, rotation_vector, angle, size_class):
         box_size = self.meanSize(int(size_class))
         obb = np.zeros(10)
         obb[0:3] = center
         obb[3:6] = box_size
         obb[6:9] = rotation_vector
-        obb[9] = heading_angle
+        obb[9] = angle
         return obb
 
 
