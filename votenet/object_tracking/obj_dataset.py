@@ -271,7 +271,7 @@ def viz_obb(pc, label, mask, rotation_vector, theta_label):
     K = label.shape[0]
     for i in range(K):
         if mask[i] == 0: continue
-        obb = DC.param2obb(label[i, 0:3], rotation_vector, theta, 0)
+        obb = DC.param2obb(label[i, 0:3], rotation_vector, theta_label, 0)
         print(obb)
         oriented_boxes.append(obb)
     #pc_util.write_oriented_bbox(oriented_boxes, 'gt_obbs.ply')
@@ -296,8 +296,8 @@ def get_sem_cls_statistics():
     print(sem_cls_cnt)
 
 if __name__=='__main__':
-    assert (len(sys.argv) == 2)
-    d = OBJDetectionVotesDataset(sys.argv[1], num_points=75000, extra_channels=1, augment=True, split_set='train')
+    assert (len(sys.argv) == 3)
+    d = OBJDetectionVotesDataset(sys.argv[1], sys.argv[2], num_points=75000, extra_channels=1, augment=True, split_set='train')
     sample = d[0]
     #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')
