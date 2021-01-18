@@ -148,7 +148,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=8192,
                 radius=0.08,
                 nsample=64,
-                mlp=[input_feature_dim, 128, 128, 256],
+                mlp=[input_feature_dim, 128, 128, 128],
                 use_xyz=True,
                 normalize_xyz=True,
                 use_relative_xyz=False,
@@ -159,7 +159,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=4096,
                 radius=0.2,
                 nsample=32,
-                mlp=[256, 256, 256, 512],
+                mlp=[128, 128, 128, 256],
                 use_xyz=True,
                 normalize_xyz=True,
                 use_relative_xyz=False,
@@ -170,7 +170,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=2048,
                 radius=0.5,
                 nsample=16,
-                mlp=[512, 256, 256, 512],
+                mlp=[256, 128, 128, 256],
                 use_xyz=True,
                 normalize_xyz=True,
                 use_relative_xyz=False,
@@ -181,7 +181,7 @@ class Pointnet2Backbone(nn.Module):
                 npoint=1024,
                 radius=1.0,
                 nsample=16,
-                mlp=[512, 256, 256, 512],
+                mlp=[256, 128, 128, 256],
                 use_xyz=True,
                 normalize_xyz=True,
                 use_relative_xyz=False,
@@ -199,8 +199,8 @@ class Pointnet2Backbone(nn.Module):
         #         dropout=0.3
         #     )
 
-        self.fp1 = PointnetFPModule(mlp=[512+512,512,512])
-        self.fp2 = PointnetFPModule(mlp=[512+512,512,512])
+        self.fp1 = PointnetFPModule(mlp=[256+256,256,256])
+        self.fp2 = PointnetFPModule(mlp=[256+256,256,256])
         #self.fp3 = PointnetFPModule(mlp=[256+256,256,256]) 
 
     def _break_up_pc(self, pc):
