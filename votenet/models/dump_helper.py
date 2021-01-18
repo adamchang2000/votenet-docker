@@ -86,6 +86,17 @@ def dump_results(end_points, dump_dir, config, inference_switch=False, idx_beg =
             pc_util.write_ply(end_points['vote_xyz'][i,:,:], os.path.join(dump_dir, '%06d_vgen_pc.ply'%(idx_beg+i)))
             pc_util.write_ply(aggregated_vote_xyz[i,:,:], os.path.join(dump_dir, '%06d_aggregated_vote_pc.ply'%(idx_beg+i)))
             pc_util.write_ply(aggregated_vote_xyz[i,:,:], os.path.join(dump_dir, '%06d_aggregated_vote_pc.ply'%(idx_beg+i)))
+
+            num_seed = end_points['seed_xyz'].shape[1] # B,num_seed,3
+            seed_inds = end_points['seed_inds'].long() # B,num_seed in [0,num_points-1]
+            seed_gt_votes_mask = torch.gather(end_points['vote_label_mask'], 1, seed_inds)
+            seed_inds_expand = seed_inds.view(batch_size,num_seed,1).repeat(1,1,3*GT_VOTE_FACTOR)
+
+            real_votes = end_points['vote_xyz'][i,:,:]
+            real_votes = real_votes[seed_gt_votes_mask[i] == 1]
+
+            pc_util.write_ply(real_votes, os.path.join(dump_dir, '%06d_obj_vgen_pc.ply'%(idx_beg+i)))
+
         pc_util.write_ply(pred_center[i,:,0:3], os.path.join(dump_dir, '%06d_proposal_pc.ply'%(idx_beg+i)))
         if np.sum(objectness_prob>DUMP_CONF_THRESH)>0:
             pc_util.write_ply(pred_center[i,objectness_prob>DUMP_CONF_THRESH,0:3], os.path.join(dump_dir, '%06d_confident_proposal_pc.ply'%(idx_beg+i)))
