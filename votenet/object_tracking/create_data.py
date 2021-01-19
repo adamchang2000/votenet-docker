@@ -9,11 +9,11 @@ def main():
 	#model_path = 'medical/medical_textured.obj'
 	output_path = 'model_data/'
 	scene_path = 'scenes_azure/'
-	number_of_samples = 400
-	training_number = 250
-	testing_number = 149
-	val_number = 1
-	num_points = 3000
+	number_of_samples = 300
+	training_number = 200
+	testing_number = 90
+	val_number = 10
+	num_points = 2500
 	scale_output_pcld = 1.0
 	scale = 0.001 * scale_output_pcld
 	
