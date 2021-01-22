@@ -334,9 +334,10 @@ def get_loss(end_points, config):
     """
 
     #LOSS MULTIPLIERS
-    VOTE_LOSS_MULTIPLIER = 100 #votes are not even close to the object, different parts of the scene are voting for the object lol
+    VOTE_LOSS_MULTIPLIER = 1000 #votes are not even close to the object, different parts of the scene are voting for the object lol
     OBJECTNESS_LOSS_MULTIPLIER = 0.5
     BOX_LOSS_MULTIPLIER = 1
+    ROTATION_LOSS_MULTIPLIER = 0.1
 
     # Vote loss
     vote_loss = compute_vote_loss(end_points)
@@ -366,7 +367,7 @@ def get_loss(end_points, config):
     #end_points['size_cls_loss'] = size_cls_loss
     #end_points['size_reg_loss'] = size_reg_loss
     #end_points['sem_cls_loss'] = sem_cls_loss
-    box_loss = center_loss + rotation_loss_corr + rotation_loss_nn
+    box_loss = center_loss + ROTATION_LOSS_MULTIPLIER*rotation_loss_corr + ROTATION_LOSS_MULTIPLIER*rotation_loss_nn
     end_points['box_loss'] = box_loss
 
     # Final loss function

@@ -52,24 +52,23 @@ class ProposalModule(nn.Module):
         # Vote clustering
         self.vote_aggregation = PointnetSAModuleVotes( 
                 npoint=self.num_proposal,
-                radius=0.2, #0.4 new, 0.1 old?
+                radius=0.3, #0.4 new, 0.1 old?
                 nsample=64,
-                mlp=[self.seed_feat_dim, 128, 128, 128],
+                mlp=[self.seed_feat_dim, 256, 256, 256],
                 use_xyz=True,
                 normalize_xyz=True,
-                use_relative_xyz=False,
-                dropout=0.3
+                use_relative_xyz=False
             )
     
         # Object proposal/detection
         # Objectness scores (2), center residual (3),
         # heading class+residual (num_heading_bin*2), size class+residual(num_size_cluster*4)
-        self.conv1 = torch.nn.Conv1d(128,128,1)
-        self.conv2 = torch.nn.Conv1d(128,128,1)
+        self.conv1 = torch.nn.Conv1d(256,256,1)
+        self.conv2 = torch.nn.Conv1d(256,256,1)
         #objectness scores (2), center residual (3),  rotation vector (3), theta
-        self.conv3 = torch.nn.Conv1d(128,2+3+4,1)
-        self.bn1 = torch.nn.BatchNorm1d(128)
-        self.bn2 = torch.nn.BatchNorm1d(128)
+        self.conv3 = torch.nn.Conv1d(256,2+3+4,1)
+        self.bn1 = torch.nn.BatchNorm1d(256)
+        self.bn2 = torch.nn.BatchNorm1d(256)
 
     def forward(self, xyz, features, end_points):
         """

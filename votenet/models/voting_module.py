@@ -31,9 +31,13 @@ class VotingModule(nn.Module):
         self.out_dim = self.in_dim # due to residual feature, in_dim has to be == out_dim
         self.conv1 = torch.nn.Conv1d(self.in_dim, self.in_dim, 1)
         self.conv2 = torch.nn.Conv1d(self.in_dim, self.in_dim, 1)
-        self.conv3 = torch.nn.Conv1d(self.in_dim, (3+self.out_dim) * self.vote_factor, 1)
+        self.conv3 = torch.nn.Conv1d(self.in_dim, self.in_dim, 1)
+        self.conv4 = torch.nn.Conv1d(self.in_dim, self.in_dim, 1)
+        self.conv5 = torch.nn.Conv1d(self.in_dim, (3+self.out_dim) * self.vote_factor, 1)
         self.bn1 = torch.nn.BatchNorm1d(self.in_dim)
         self.bn2 = torch.nn.BatchNorm1d(self.in_dim)
+        self.bn3 = torch.nn.BatchNorm1d(self.in_dim)
+        self.bn4 = torch.nn.BatchNorm1d(self.in_dim)
         
     def forward(self, seed_xyz, seed_features):
         """ Forward pass.
@@ -50,7 +54,9 @@ class VotingModule(nn.Module):
         num_vote = num_seed*self.vote_factor
         net = F.relu(self.bn1(self.conv1(seed_features))) 
         net = F.relu(self.bn2(self.conv2(net))) 
-        net = self.conv3(net) # (batch_size, (3+out_dim)*vote_factor, num_seed)
+        net = F.relu(self.bn3(self.conv3(net)))
+        net = F.relu(self.bn4(self.conv4(net)))
+        net = self.conv5(net) # (batch_size, (3+out_dim)*vote_factor, num_seed)
                 
         net = net.transpose(2,1).view(batch_size, num_seed, self.vote_factor, 3+self.out_dim)
         offset = net[:,:,:,0:3]
