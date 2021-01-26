@@ -52,8 +52,8 @@ class ProposalModule(nn.Module):
         # Vote clustering
         self.vote_aggregation = PointnetSAModuleVotes( 
                 npoint=self.num_proposal,
-                radius=0.3, #0.4 new, 0.1 old?
-                nsample=64,
+                radius=0.5, #0.4 new, 0.1 old?
+                nsample=2048,
                 mlp=[self.seed_feat_dim, 256, 256, 256],
                 use_xyz=True,
                 normalize_xyz=True,
@@ -100,8 +100,12 @@ class ProposalModule(nn.Module):
         end_points['aggregated_vote_inds'] = sample_inds # (batch_size, num_proposal,) # should be 0,1,2,...,num_proposal
 
         # --------- PROPOSAL GENERATION ---------
-        net = F.relu(self.bn1(self.conv1(features))) 
-        net = F.relu(self.bn2(self.conv2(net))) 
+        if self.num_proposal > 1:
+            net = F.relu(self.bn1(self.conv1(features))) 
+            net = F.relu(self.bn2(self.conv2(net)))
+        else:
+            net = F.relu(self.conv1(features))
+            net = F.relu(self.conv2(net))
         net = self.conv3(net) # (batch_size, 2+3+num_heading_bin*2+num_size_cluster*4, num_proposal)
 
         end_points = decode_scores(net, end_points, self.num_class, self.num_heading_bin, self.num_size_cluster, self.mean_size_arr)

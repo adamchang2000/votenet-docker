@@ -3,7 +3,7 @@ import numpy as np
 from obj_to_pointcloud_util import *
 from scipy.spatial.transform import Rotation as R
 
-file = 'model_data/4_data.npz'
+file = 'model_data/2_data.npz'
 data = np.load(file)
 
 pcld = o3d.geometry.PointCloud()
@@ -63,10 +63,17 @@ for pc in model_point_cloud:
 points = np.asarray(points)
 colors = np.asarray(colors)
 
+print('colors')
+print(colors[0])
+print(colors.shape)
+print(colors.dtype)
+
 print(np.unique(colors))
+a = colors[colors > 0.7]
+print(a.shape)
 
 pcld.points = o3d.utility.Vector3dVector(points)
-#pcld.colors = o3d.utility.Vector3dVector(colors)
+pcld.colors = o3d.utility.Vector3dVector(colors)
 
 
 print('pc bounds:')

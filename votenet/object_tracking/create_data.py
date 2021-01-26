@@ -13,7 +13,7 @@ def main():
 	training_number = 200
 	testing_number = 90
 	val_number = 10
-	num_points = 2500
+	num_points = 1500
 	scale_output_pcld = 1.0
 	scale = 0.001 * scale_output_pcld
 	
@@ -49,7 +49,9 @@ def main():
 		scene_pts = np.array(scene.points) * scale_output_pcld
 		scene_colors = np.array(scene.colors)
 
-		model_pcld, bb, axis_angles, theta = get_perspective_data_from_model_seed(i, model, points=num_points, center = scene_pts[np.random.randint(scene_pts.shape[0])], scene_scale = scale_output_pcld)
+		center = scene_pts[np.random.randint(scene_pts.shape[0])]
+
+		model_pcld, bb, axis_angles, theta = get_perspective_data_from_model_seed(i, model, points=num_points, center = center, scene_scale = scale_output_pcld)
 
 		box3d_centers = np.asarray([bb.get_center()])
 		box3d_sizes = np.asarray([bb.get_max_bound() - bb.get_min_bound()])
@@ -65,6 +67,14 @@ def main():
 
 		#single channel, 1 or 0, after adaptive threshold filter
 		scene_point_cloud = np.asarray([[p[0], p[1], p[2], 0] for p,c in zip(scene_pts, scene_colors)])
+
+		scene_point_cloud = scene_point_cloud[np.sum(np.square(scene_pts - center), axis = 1) < 0.2]
+
+		print(scene_point_cloud.shape)
+
+		a = np.sum(np.square(scene_pts - center), axis = 1)
+		print(a)
+
 		#scene_point_cloud = np.array([[0, 0, 0, 0]])
 		model_point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(model_points, model_colors)])
 

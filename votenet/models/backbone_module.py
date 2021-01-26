@@ -145,48 +145,48 @@ class Pointnet2Backbone(nn.Module):
         super().__init__()
 
         self.sa1 = PointnetSAModuleVotes(
-                npoint=8192,
+                npoint=4096,
                 radius=0.1,
                 nsample=64,
-                mlp=[input_feature_dim, 256, 256, 256],
+                mlp=[input_feature_dim, 512, 512, 512],
                 use_xyz=True,
                 normalize_xyz=True,
                 use_relative_xyz=False,
                 dropout=0.3
             )
 
-        self.sa2 = PointnetSAModuleVotes(
-                npoint=4096,
-                radius=0.2,
-                nsample=32,
-                mlp=[256, 256, 256, 512],
-                use_xyz=True,
-                normalize_xyz=True,
-                use_relative_xyz=False,
-                dropout=0.3
-            )
+        # self.sa2 = PointnetSAModuleVotes(
+        #         npoint=4096,
+        #         radius=0.2,
+        #         nsample=32,
+        #         mlp=[256, 256, 256, 512],
+        #         use_xyz=True,
+        #         normalize_xyz=True,
+        #         use_relative_xyz=False,
+        #         dropout=0.3
+        #     )
 
-        self.sa3 = PointnetSAModuleVotes(
-                npoint=2048,
-                radius=0.5,
-                nsample=16,
-                mlp=[512, 256, 256, 512],
-                use_xyz=True,
-                normalize_xyz=True,
-                use_relative_xyz=False,
-                dropout=0.3
-            )
+        # self.sa3 = PointnetSAModuleVotes(
+        #         npoint=2048,
+        #         radius=0.5,
+        #         nsample=16,
+        #         mlp=[512, 256, 256, 512],
+        #         use_xyz=True,
+        #         normalize_xyz=True,
+        #         use_relative_xyz=False,
+        #         dropout=0.3
+        #     )
 
-        self.sa4 = PointnetSAModuleVotes(
-                npoint=1024,
-                radius=1.0,
-                nsample=16,
-                mlp=[512, 256, 256, 512],
-                use_xyz=True,
-                normalize_xyz=True,
-                use_relative_xyz=False,
-                dropout=0.3
-            )
+        # self.sa4 = PointnetSAModuleVotes(
+        #         npoint=1024,
+        #         radius=1.0,
+        #         nsample=16,
+        #         mlp=[512, 256, 256, 512],
+        #         use_xyz=True,
+        #         normalize_xyz=True,
+        #         use_relative_xyz=False,
+        #         dropout=0.3
+        #     )
 
         # self.sa5 = PointnetSAModuleVotes(
         #         npoint=256,
@@ -199,8 +199,8 @@ class Pointnet2Backbone(nn.Module):
         #         dropout=0.3
         #     )
 
-        self.fp1 = PointnetFPModule(mlp=[512+512,512,512])
-        self.fp2 = PointnetFPModule(mlp=[512+512,512,512])
+        #self.fp1 = PointnetFPModule(mlp=[512+512,512,512])
+        #self.fp2 = PointnetFPModule(mlp=[512+512,512,512])
         #self.fp3 = PointnetFPModule(mlp=[256+256,256,256]) 
 
     def _break_up_pc(self, pc):
@@ -243,18 +243,18 @@ class Pointnet2Backbone(nn.Module):
         end_points['sa1_xyz'] = xyz
         end_points['sa1_features'] = features
 
-        xyz, features, fps_inds = self.sa2(xyz, features) # this fps_inds is just 0,1,...,1023
-        end_points['sa2_inds'] = fps_inds
-        end_points['sa2_xyz'] = xyz
-        end_points['sa2_features'] = features
+        #xyz, features, fps_inds = self.sa2(xyz, features) # this fps_inds is just 0,1,...,1023
+        #end_points['sa2_inds'] = fps_inds
+        #end_points['sa2_xyz'] = xyz
+        #end_points['sa2_features'] = features
 
-        xyz, features, fps_inds = self.sa3(xyz, features) # this fps_inds is just 0,1,...,511
-        end_points['sa3_xyz'] = xyz
-        end_points['sa3_features'] = features
+        #xyz, features, fps_inds = self.sa3(xyz, features) # this fps_inds is just 0,1,...,511
+        #end_points['sa3_xyz'] = xyz
+        #end_points['sa3_features'] = features
 
-        xyz, features, fps_inds = self.sa4(xyz, features) # this fps_inds is just 0,1,...,255
-        end_points['sa4_xyz'] = xyz
-        end_points['sa4_features'] = features
+        #xyz, features, fps_inds = self.sa4(xyz, features) # this fps_inds is just 0,1,...,255
+        #end_points['sa4_xyz'] = xyz
+        #end_points['sa4_features'] = features
 
         # xyz, features, fps_inds = self.sa5(xyz, features) # this fps_inds is just 0,1,...,255
         # end_points['sa5_xyz'] = xyz
@@ -262,10 +262,10 @@ class Pointnet2Backbone(nn.Module):
 
         # --------- 2 FEATURE UPSAMPLING LAYERS --------
         #features = self.fp1(end_points['sa4_xyz'], end_points['sa5_xyz'], end_points['sa4_features'], end_points['sa5_features'])
-        features = self.fp1(end_points['sa3_xyz'], end_points['sa4_xyz'], end_points['sa3_features'], end_points['sa4_features'])
-        features = self.fp2(end_points['sa2_xyz'], end_points['sa3_xyz'], end_points['sa2_features'], features)
+        #features = self.fp1(end_points['sa3_xyz'], end_points['sa4_xyz'], end_points['sa3_features'], end_points['sa4_features'])
+        #features = self.fp2(end_points['sa2_xyz'], end_points['sa3_xyz'], end_points['sa2_features'], features)
         end_points['fp2_features'] = features
-        end_points['fp2_xyz'] = end_points['sa2_xyz']
+        end_points['fp2_xyz'] = end_points['sa1_xyz']
         num_seed = end_points['fp2_xyz'].shape[1]
         end_points['fp2_inds'] = end_points['sa1_inds'][:,0:num_seed] # indices among the entire input point clouds
         return end_points
