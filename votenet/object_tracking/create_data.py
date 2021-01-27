@@ -70,10 +70,10 @@ def main():
 
 		scene_point_cloud = scene_point_cloud[np.sum(np.square(scene_pts - center), axis = 1) < 0.2]
 
-		print(scene_point_cloud.shape)
+		#print(scene_point_cloud.shape)
 
-		a = np.sum(np.square(scene_pts - center), axis = 1)
-		print(a)
+		#a = np.sum(np.square(scene_pts - center), axis = 1)
+		#print(a)
 
 		#scene_point_cloud = np.array([[0, 0, 0, 0]])
 		model_point_cloud = np.asarray([[p[0], p[1], p[2], c[0]] for p,c in zip(model_points, model_colors)])
