@@ -464,8 +464,8 @@ def train(start_epoch):
         except:
             save_dict['model_state_dict'] = net.state_dict()
         torch.save(save_dict, os.path.join(LOG_DIR, 'checkpoint.tar'))
-        if i % 10 == 9:
-            plot_grad_flow(net.named_parameters(), i)
+        #if i % 10 == 9:
+        #    plot_grad_flow(net.named_parameters(), i)
 
         i += 1
 
