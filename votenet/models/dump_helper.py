@@ -13,7 +13,7 @@ sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import pc_util
 
 DUMP_CONF_THRESH = 0.1 # Dump boxes with obj prob larger than that.
-GT_VOTE_FACTOR = 3 # number of GT votes per point
+GT_VOTE_FACTOR = 1 # number of GT votes per point
 
 def softmax(x):
     ''' Numpy function for softmax'''

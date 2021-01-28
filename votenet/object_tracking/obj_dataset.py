@@ -223,7 +223,8 @@ class OBJDetectionVotesDataset(Dataset):
 
         label_mask = np.asarray([1])
 
-        vote_labels = np.asarray([[a[0], a[1], a[2], a[0], a[1], a[2], a[0], a[1], a[2]] for a in votes])
+        #vote_labels = np.asarray([[a[0], a[1], a[2], a[0], a[1], a[2], a[0], a[1], a[2]] for a in votes])
+        vote_labels = np.asarray([[a[0], a[1], a[2]] for a in votes])
 
         ret_dict = {}
         ret_dict['point_clouds'] = point_cloud.astype(np.float32)

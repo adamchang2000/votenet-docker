@@ -16,7 +16,7 @@ from scipy.spatial.transform import Rotation as R
 
 FAR_THRESHOLD = 0.05
 NEAR_THRESHOLD = 0.05
-GT_VOTE_FACTOR = 3 # number of GT votes per point
+GT_VOTE_FACTOR = 1 # number of GT votes per point
 OBJECTNESS_CLS_WEIGHTS = [0.09,0.91] # put larger weights on positive objectness, #think about relationship between object_cls_weights and neg/pos_ratio
 
 def compute_vote_loss(end_points):
