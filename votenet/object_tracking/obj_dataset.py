@@ -61,9 +61,6 @@ class OBJDetectionVotesDataset(Dataset):
         self.num_points = num_points
         self.use_color = use_color
         self.extra_channels = extra_channels
-
-        #make sure the mean is the same size
-        assert(extra_channels == MEAN_EXTRA_CHANNELS.shape[0])
         
         self.augment = augment
 
