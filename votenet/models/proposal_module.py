@@ -53,7 +53,7 @@ class ProposalModule(nn.Module):
         self.vote_aggregation = PointnetSAModuleVotes( 
                 npoint=self.num_proposal,
                 radius=0.5, #0.4 new, 0.1 old?
-                nsample=2048,
+                nsample=1500,
                 mlp=[self.seed_feat_dim, 256, 256, 256],
                 use_xyz=True,
                 normalize_xyz=True,

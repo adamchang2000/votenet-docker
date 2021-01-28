@@ -145,7 +145,7 @@ class Pointnet2Backbone(nn.Module):
         super().__init__()
 
         self.sa1 = PointnetSAModuleVotes(
-                npoint=4096,
+                npoint=1500,
                 radius=0.1,
                 nsample=64,
                 mlp=[input_feature_dim, 512, 512, 512],
