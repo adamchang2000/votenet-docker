@@ -60,7 +60,7 @@ def compute_vote_loss(end_points):
     vote_xyz_reshape = vote_xyz.view(batch_size*num_seed, -1, 3) # from B,num_seed*vote_factor,3 to B*num_seed,vote_factor,3
     seed_gt_votes_reshape = seed_gt_votes.view(batch_size*num_seed, GT_VOTE_FACTOR, 3) # from B,num_seed,3*GT_VOTE_FACTOR to B*num_seed,GT_VOTE_FACTOR,3
 
-    obj_votes = vote_xyz_reshape[seed_gt_votes_mask == 1]
+    obj_votes = vote_xyz_reshape[seed_gt_votes_reshape == 1]
 
     # A predicted vote to no where is not penalized as long as there is a good vote near the GT vote.
     dist1, _, dist2, _ = nn_distance(obj_votes, seed_gt_votes_reshape, l1=True)
