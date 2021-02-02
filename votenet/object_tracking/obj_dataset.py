@@ -248,12 +248,8 @@ def viz_votes(pc, point_votes, point_votes_mask):
     inds = (point_votes_mask==1)
     pc_obj = pc[inds,0:3]
     pc_obj_voted1 = pc_obj + point_votes[inds,0:3]
-    pc_obj_voted2 = pc_obj + point_votes[inds,3:6]
-    pc_obj_voted3 = pc_obj + point_votes[inds,6:9]
     pc_util.write_ply(pc_obj, 'pc_obj.ply')
     pc_util.write_ply(pc_obj_voted1, 'pc_obj_voted1.ply')
-    pc_util.write_ply(pc_obj_voted2, 'pc_obj_voted2.ply')
-    pc_util.write_ply(pc_obj_voted3, 'pc_obj_voted3.ply')
 
 def viz_obb(pc, label, mask, rotation_vector, theta_label):
     """ Visualize oriented bounding box ground truth
@@ -295,7 +291,7 @@ def get_sem_cls_statistics():
 
 if __name__=='__main__':
     assert (len(sys.argv) == 3)
-    d = OBJDetectionVotesDataset(sys.argv[1], sys.argv[2], num_points=75000, extra_channels=1, augment=True, split_set='train')
+    d = OBJDetectionVotesDataset(sys.argv[1], sys.argv[2], num_points=25000, extra_channels=1, augment=True, split_set='train')
     sample = d[0]
     #print(sample['vote_label'].shape, sample['vote_label_mask'].shape, np.sum(sample['vote_label']))
     pc_util.write_ply(sample['point_clouds'], 'pc.ply')

@@ -12,7 +12,7 @@ from object_tracking.obj_to_pointcloud_util import eulerAnglesToRotationMatrix
 from utils.camera import D435i_camera, Azure_Kinect_camera
 
 #sample this many points
-NUM_POINTS_NETWORK = 100000
+NUM_POINTS_NETWORK = 15000
 
 
 def perform_icp(box_points, pcld_input, model_pcld):
@@ -44,6 +44,10 @@ def perform_icp(box_points, pcld_input, model_pcld):
     o3d.io.write_point_cloud('target.ply', model_pcld)
 
 
+def find_bounding_box(ir):
+    a = np.where(ir != 0)
+    bbox = np.min(a[0]), np.max(a[0]), np.min(a[1]), np.max(a[1])
+    return bbox
     
 
 def main():
@@ -84,6 +88,7 @@ def main():
     
     idx = 0
     scale_output_pcld = 1.0
+    USE_IR_MASK = False
 
     output_dir = 'output/'
 
@@ -102,58 +107,63 @@ def main():
         
 
             success, color_image, depth_image, pcld, ir = camera.get_frame()
+            
             if not success:
                 continue
 
+            pcld *= scale_output_pcld
             depth_image_flatten = depth_image.flatten()
+            color_image_flatten = color_image.reshape((color_image.shape[0] * color_image.shape[1], color_image.shape[2]))
 
-            gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-            gray_image = adaptive_threshold_3d_surface(gray_image, depth_image)
-
-            print(ir.dtype)
-            print(ir.shape)
-            print(np.max(ir))
-
-            ir = hard_threshold_image(ir, 65000, val = 65535)
-
-            print(np.max(ir))
-            print(ir.dtype)
+            #gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
+            #gray_image = adaptive_threshold_3d_surface(gray_image, depth_image)
 
             #rescale from 0-255 to 0-1
-            gray_image_flatten = gray_image.flatten() / 255.
-            gray_image_flatten = gray_image_flatten.reshape((gray_image_flatten.shape[0], 1))
+            #gray_image_flatten = gray_image.flatten() / 255.
+            #gray_image_flatten = gray_image_flatten.reshape((gray_image_flatten.shape[0], 1))
 
-            #print(pcld.shape)
             #print(gray_image_flatten.shape)
 
-            pcld *= scale_output_pcld
-
-            #xyzrgb
-            pcld_input = np.hstack((pcld, gray_image_flatten))
             #get rid of bad depth measurements
-            pcld_input = pcld_input[abs(depth_image_flatten - clipping_distance / 2) < clipping_distance / 2].astype(np.float32)
-            print('non-zero depth points ', pcld_input.shape)
+            pcld_input = pcld[abs(depth_image_flatten - clipping_distance / 2) < clipping_distance / 2].astype(np.float32)
+            color_image_pcld = color_image_flatten[abs(depth_image_flatten - clipping_distance / 2) < clipping_distance / 2]
 
+            if USE_IR_MASK:
+
+                ir = hard_threshold_image(ir, 65534, val = 65535)
+
+                bounding_box = find_bounding_box(ir)
+
+                color_cropped = color_image[bounding_box[0]:bounding_box[1], bounding_box[2]:bounding_box[3]]
+
+                cv2.namedWindow('color1', cv2.WINDOW_AUTOSIZE)
+                cv2.imshow('color1', color_cropped)
+
+                ir_mask = np.zeros(ir.shape).astype(np.int)
+                ir_mask[bounding_box[0]:bounding_box[1], bounding_box[2]:bounding_box[3]] = 1
+                ir_mask = ir_mask.flatten()
+
+                ir_mask = ir_mask[abs(depth_image_flatten - clipping_distance / 2) < clipping_distance / 2]
+
+                pcld_input = pcld_input[ir_mask == 1]
+                color_image_pcld = color_image_pcld[ir_mask == 1]
+
+            # save the image frame
+            save_pcld = o3d.geometry.PointCloud()
+            save_pcld.points = o3d.utility.Vector3dVector(pcld_input[:,:3])
+
+            bgr_colors = color_image_pcld[:,:3] / 255.
+            rgb_colors = np.vstack([bgr_colors[:,2], bgr_colors[:,1], bgr_colors[:,0]]).T
+
+            save_pcld.colors = o3d.utility.Vector3dVector(rgb_colors)
+
+            print('non-zero depth points ', pcld_input.shape)
 
             if pcld_input.shape[0] > NUM_POINTS_NETWORK:
 
                 index = np.random.choice(pcld_input.shape[0], NUM_POINTS_NETWORK, replace=False)
                 pcld_input = pcld_input[index]
-
-                print('this should be [0, 1]:')
-                print(np.unique(pcld_input.T[3]))
-
-                # save the image frame
-
-                save_pcld = o3d.geometry.PointCloud()
-                save_pcld.points = o3d.utility.Vector3dVector(pcld_input[:,:3])
-
-                rgb_colors = np.zeros((pcld_input.shape[0], 3))
-                rgb_colors[:,0] = pcld_input[:,3]
-                rgb_colors[:,1] = pcld_input[:,3]
-                rgb_colors[:,2] = pcld_input[:,3]
-
-                save_pcld.colors = o3d.utility.Vector3dVector(rgb_colors)
+                color_image_pcld = color_image_pcld[index]
 
                 if args.run_net:
                     #run network on image
@@ -167,20 +177,20 @@ def main():
             # Render images
             cv2.namedWindow('depth', cv2.WINDOW_AUTOSIZE)
             cv2.namedWindow('color', cv2.WINDOW_AUTOSIZE)
-            cv2.namedWindow('gray', cv2.WINDOW_AUTOSIZE)
-            cv2.namedWindow('ir', cv2.WINDOW_AUTOSIZE)
+            
             cv2.imshow('depth', depth_image)
             cv2.imshow('color', color_image)
-            cv2.imshow('gray', gray_image)
-            cv2.imshow('ir', ir)
+
+            if USE_IR_MASK:
+                cv2.namedWindow('ir', cv2.WINDOW_AUTOSIZE)
+                cv2.imshow('ir', ir)
                 
 
             if args.save_data:
-
+                
                 #saving stuff
                 o3d.io.write_point_cloud(os.path.join(output_dir, str(idx) + '.ply'), save_pcld, write_ascii=True)
 
-                
                 cv2.imwrite(os.path.join(output_dir, str(idx)+'.png'), color_image)
                 cv2.imwrite(os.path.join(output_dir, str(idx)+'_d.png'), depth_image)
                 cv2.imwrite(os.path.join(output_dir, str(idx)+'_ir.png'), ir)

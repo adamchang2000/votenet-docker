@@ -46,6 +46,8 @@ def compute_vote_loss(end_points):
     vote_xyz = end_points['vote_xyz'] # B,num_seed*vote_factor,3
     seed_inds = end_points['seed_inds'].long() # B,num_seed in [0,num_points-1]
 
+    gt_center = end_points['center_label'][:,:,0:3]
+
     # Get groundtruth votes for the seed points
     # vote_label_mask: Use gather to select B,num_seed from B,num_point
     #   non-object point has no GT vote mask = 0, object point has mask = 1
@@ -56,17 +58,17 @@ def compute_vote_loss(end_points):
     seed_gt_votes = torch.gather(end_points['vote_label'], 1, seed_inds_expand)
     seed_gt_votes += end_points['seed_xyz']
 
-    # Compute the min of min of distance
-    vote_xyz_reshape = vote_xyz.view(batch_size*num_seed, -1, 3) # from B,num_seed*vote_factor,3 to B*num_seed,vote_factor,3
-    seed_gt_votes_reshape = seed_gt_votes.view(batch_size*num_seed, GT_VOTE_FACTOR, 3) # from B,num_seed,3*GT_VOTE_FACTOR to B*num_seed,GT_VOTE_FACTOR,3
 
-    obj_votes = vote_xyz_reshape[seed_gt_votes_reshape == 1]
+    
+    #loss function is distance from closest vote to gt_center 
+    #+ distance from each object vote to gt_center
 
-    # A predicted vote to no where is not penalized as long as there is a good vote near the GT vote.
-    dist1, _, dist2, _ = nn_distance(obj_votes, seed_gt_votes_reshape, l1=True)
-    votes_dist, _ = torch.min(dist2, dim=1) # (B*num_seed,vote_factor) to (B*num_seed,)
-    votes_dist = votes_dist.view(batch_size, num_seed)
-    vote_loss = torch.sum(votes_dist*seed_gt_votes_mask.float())/(torch.sum(seed_gt_votes_mask.float())+1e-6)
+    dist1, ind1, dist2, _ = nn_distance(vote_xyz, gt_center) # dist1: BxK, dist2: BxK2
+
+    #votes_dist, _ = torch.min(dist2, dim=1) # (B*num_seed,vote_factor) to (B*num_seed,)
+    #votes_dist = votes_dist.view(batch_size, num_seed)
+    vote_loss = torch.sum(dist2)
+    vote_loss += torch.sum(dist1*seed_gt_votes_mask.float())/(torch.sum(seed_gt_votes_mask.float())+1e-6)
     return vote_loss
 
 def compute_objectness_loss(end_points):
@@ -337,7 +339,7 @@ def get_loss(end_points, config):
     """
 
     #LOSS MULTIPLIERS
-    VOTE_LOSS_MULTIPLIER = 1000 #votes are not even close to the object, different parts of the scene are voting for the object lol
+    VOTE_LOSS_MULTIPLIER = 1 #votes are not even close to the object, different parts of the scene are voting for the object lol
     OBJECTNESS_LOSS_MULTIPLIER = 0.5
     BOX_LOSS_MULTIPLIER = 1
     ROTATION_LOSS_MULTIPLIER = 0.1

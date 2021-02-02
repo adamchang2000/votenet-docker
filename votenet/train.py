@@ -65,8 +65,8 @@ parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial 
 parser.add_argument('--weight_decay', type=float, default=0, help='Optimization L2 weight decay [default: 0]')
 parser.add_argument('--bn_decay_step', type=int, default=20, help='Period of BN decay (in epochs) [default: 20]')
 parser.add_argument('--bn_decay_rate', type=float, default=0.5, help='Decay rate for BN decay [default: 0.5]')
-parser.add_argument('--lr_decay_steps', default='80,120,160', help='When to decay the learning rate (in epochs) [default: 80,120,160]')
-parser.add_argument('--lr_decay_rates', default='0.1,0.1,0.1', help='Decay rates for lr decay [default: 0.1,0.1,0.1]')
+parser.add_argument('--lr_decay_steps', default='80,120,160,200,250', help='When to decay the learning rate (in epochs) [default: 80,120,160]')
+parser.add_argument('--lr_decay_rates', default='0.1,0.1,0.1,0.1,0.1', help='Decay rates for lr decay [default: 0.1,0.1,0.1]')
 parser.add_argument('--lr_decay', default=0.001, type=float, help='Decay rate, lr = base_learning_rate * 1 / (1 + decay rate * iteration)')
 parser.add_argument('--no_height', action='store_true', help='Do NOT use height signal in input.')
 parser.add_argument('--use_color', action='store_true', help='Use RGB color in input.')
@@ -237,12 +237,24 @@ bnm_scheduler = BNMomentumScheduler(net, bn_lambda=bn_lbmd, last_epoch=start_epo
 LR_DECAY_RATE = FLAGS.lr_decay
 #set decay rate such that at epoch 10, lr = 1/2
 #LR_DECAY_RATE = 0.001
-def get_current_lr(iter_count):
-    lr = BASE_LEARNING_RATE * 1 / (1 + LR_DECAY_RATE * iter_count)
+# def get_current_lr(iter_count):
+#     lr = BASE_LEARNING_RATE * 1 / (1 + LR_DECAY_RATE * iter_count)
+#     return lr
+
+# def adjust_learning_rate(optimizer, iter_count):
+#     lr = get_current_lr(iter_count)
+#     for param_group in optimizer.param_groups:
+#         param_group['lr'] = lr
+
+def get_current_lr(epoch):
+    lr = BASE_LEARNING_RATE
+    for i,lr_decay_epoch in enumerate(LR_DECAY_STEPS):
+        if epoch >= lr_decay_epoch:
+            lr *= LR_DECAY_RATES[i]
     return lr
 
-def adjust_learning_rate(optimizer, iter_count):
-    lr = get_current_lr(iter_count)
+def adjust_learning_rate(optimizer, epoch):
+    lr = get_current_lr(epoch)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -326,7 +338,7 @@ def train_one_epoch():
     for batch_idx, batch_data_label in enumerate(TRAIN_DATALOADER):
         for key in batch_data_label:
             batch_data_label[key] = batch_data_label[key].to(device)
-        adjust_learning_rate(optimizer, ITER_CNT)
+        adjust_learning_rate(optimizer, EPOCH_CNT)
         #log_string('Debug: current learning rate: %f, %d'%(get_current_lr(ITER_CNT), ITER_CNT))
         # Forward pass
         optimizer.zero_grad()

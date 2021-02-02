@@ -5,3 +5,7 @@ python track.py --model_path "C:\Users\adam2\Desktop\votenet-docker\votenet\obje
 
 python train.py --dataset obj --objdata_path=object_tracking/model_data/ --model_path=object_tracking/medical/medical_bulbs.ply --num_point=75000 --channels 1 --no_height --batch_size=1 --dump_dir=dump --dump_results --max_epoch 600
 python eval.py --dataset obj --objdata_path=object_tracking/model_data/ --model_path=object_tracking/medical/medical_bulbs.ply --num_point=75000 --channels 1 --no_height --batch_size=1 --checkpoint_path=log/checkpoint.tar --dump_dir=dump
+
+
+new:
+python3.7 train.py --dataset obj --objdata_path=object_tracking/model_data/ --model_path=object_tracking/medical/medical_bulbs.ply --num_point=1500 --no_height --batch_size=32 --dump_dir=dump --dump_results --max_epoch 600

@@ -201,22 +201,9 @@ def get_perspective_data_from_model(model, xyz, axis_angles, theta, points=20000
 	place_model(model, xyz, axis_angles, theta)
 	bb.translate(xyz, relative=False)
 
-	#multiply points by 2 for more visible points
-	factor = 5
-	while True:
-		pointcloud = sample_points(model, points * factor, sample_strategy)
-		_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 50)
-
-		if len(lst) < points:
-			factor += 5
-		elif factor > 20: #less than 5% of the object is showing
-			pointcloud = sample_points(model, points, sample_strategy)
-			break
-		else:
-			np.random.shuffle(lst)
-			lst = np.array(lst[:points])
-			pointcloud = pointcloud.select_down_sample(lst)
-			break
+	pointcloud = sample_points(model, points, sample_strategy)
+	_, lst = pointcloud.hidden_point_removal(np.asarray([0., 0., 0.]), 1000)
+	pointcloud = pointcloud.select_down_sample(lst)
 
 	#insert noise into model
 	#pointcloud = augment_pointcloud(pointcloud)
@@ -245,9 +232,9 @@ def get_perspective_data_from_model_seed(seed, model, points=20000, sample_strat
 	# euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
 
 	xyz = np.copy(center)
-	xyz[0] += np.random.uniform(0.01, 0.1) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
-	xyz[1] += np.random.uniform(0.01, 0.1) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
-	xyz[2] += np.random.uniform(0.01, 0.1) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
+	xyz[0] += np.random.uniform(0.06, 0.15) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
+	xyz[1] += np.random.uniform(0.06, 0.15) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
+	xyz[2] += np.random.uniform(0.06, 0.15) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
 
 	return get_perspective_data_from_model(model, np.asarray(xyz), axis_angles, theta, points, sample_strategy)
 
