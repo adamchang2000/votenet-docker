@@ -101,7 +101,7 @@ def compute_objectness_loss(end_points):
     objectness_mask = torch.zeros((B,K)).cuda()
     objectness_label[euclidean_dist1<NEAR_THRESHOLD] = 1
     objectness_mask[euclidean_dist1<NEAR_THRESHOLD] = 1
-    objectness_mask[euclidean_dist1>FAR_THRESHOLD] = 1
+    objectness_mask[euclidean_dist1>=FAR_THRESHOLD] = 1
 
     # Compute objectness loss
     objectness_scores = end_points['objectness_scores']
@@ -339,9 +339,9 @@ def get_loss(end_points, config):
     """
 
     #LOSS MULTIPLIERS
-    VOTE_LOSS_MULTIPLIER = 1000 #votes are not even close to the object, different parts of the scene are voting for the object lol
+    VOTE_LOSS_MULTIPLIER = 10 #votes are not even close to the object, different parts of the scene are voting for the object lol
     OBJECTNESS_LOSS_MULTIPLIER = 0.5
-    BOX_LOSS_MULTIPLIER = 1000
+    BOX_LOSS_MULTIPLIER = 100
     ROTATION_LOSS_MULTIPLIER = 0.1
 
     # Vote loss

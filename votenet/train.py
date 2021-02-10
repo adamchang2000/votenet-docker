@@ -164,7 +164,7 @@ elif FLAGS.dataset == 'obj':
     from model_util_obj import OBJDatasetConfig
     DATASET_CONFIG = OBJDatasetConfig()
     TRAIN_DATASET = OBJDetectionVotesDataset(FLAGS.model_path, FLAGS.objdata_path, split_set='train', num_points=NUM_POINT,
-        use_color=FLAGS.use_color, extra_channels=FLAGS.channels, augment=True)
+        use_color=FLAGS.use_color, extra_channels=FLAGS.channels, augment=False) #augment false 
     TEST_DATASET = OBJDetectionVotesDataset(FLAGS.model_path, FLAGS.objdata_path, split_set='test', num_points=NUM_POINT,
         use_color=FLAGS.use_color, extra_channels=FLAGS.channels, augment=False)
 else:

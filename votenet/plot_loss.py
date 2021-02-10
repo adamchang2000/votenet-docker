@@ -8,8 +8,6 @@ def main():
 		print('usage: python %s <log file location>' % sys.argv[0])
 
 	log_file = sys.argv[1]
-	eval_out = os.path.join(os.path.dirname(os.path.realpath(log_file)), 'Eval_losses.png')
-	train_out = os.path.join(os.path.dirname(os.path.realpath(log_file)), 'Train_losses.png')
 
 	dir_title = os.path.dirname(os.path.realpath(log_file)).split("\\")[-1]
 
@@ -28,37 +26,59 @@ def main():
 				continue
 			if 'eval' in line:
 				z = re.match(re_eval, line)
-				lst = eval_data.get(z.groups()[0], [])
-				lst.append(float(z.groups()[1]))
-				eval_data[z.groups()[0]] = lst
+				if z:
+					lst = eval_data.get(z.groups()[0], [])
+					lst.append(float(z.groups()[1]))
+					eval_data[z.groups()[0]] = lst
 			else:
 				z = re.match(re_train, line)
-				lst = train_data.get(z.groups()[0], [])
-				lst.append(float(z.groups()[1]))
-				train_data[z.groups()[0]] = lst
+				if z:
+					lst = train_data.get(z.groups()[0], [])
+					lst.append(float(z.groups()[1]))
+					train_data[z.groups()[0]] = lst
 
-	#plot data
 	plt.rcParams["figure.figsize"] = (20,15)
-	for key, val in eval_data.items():
+	for key, train_plot in train_data.items():
+		eval_plot = eval_data[key]
 
-		data = np.array(val)
-		data /= max(np.max(data), 0.001)
+		data_train = np.array(train_plot)
+		data_eval = np.array(eval_plot)
 
-		plt.plot(data, label=key)
-	plt.title('Eval losses: ' + dir_title)
-	plt.legend()
-	plt.savefig(eval_out)
-	plt.close()
+		data_eval = np.repeat(data_eval, int(data_train.shape[0] / data_eval.shape[0]))
 
-	for key, val in train_data.items():
-		data = np.array(val)
-		data /= max(np.max(data), 0.001)
+		plt.plot(data_train, label='train')
+		plt.plot(data_eval, label='eval')
 
-		plt.plot(data, label=key)
-	plt.title('Train losses: ' +  dir_title)
-	plt.legend()
-	plt.savefig(train_out)
-	plt.close()
+		plt.title('Eval losses: ' + key + " " + dir_title)
+		plt.legend()	
+		file_out = os.path.join(os.path.dirname(os.path.realpath(log_file)), 'Loss_' + key +'.png')
+		plt.savefig(file_out)
+		plt.close()
+	
+
+
+	# #plot data
+	# plt.rcParams["figure.figsize"] = (20,15)
+	# for key, val in eval_data.items():
+
+	# 	data = np.array(val)
+	# 	data /= max(np.max(data), 0.001)
+
+	# 	plt.plot(data, label=key)
+	# plt.title('Eval losses: ' + dir_title)
+	# plt.legend()
+	# plt.savefig(eval_out)
+	# plt.close()
+
+	# for key, val in train_data.items():
+	# 	data = np.array(val)
+	# 	data /= max(np.max(data), 0.001)
+
+	# 	plt.plot(data, label=key)
+	# plt.title('Train losses: ' +  dir_title)
+	# plt.legend()
+	# plt.savefig(train_out)
+	# plt.close()
 
 
 

@@ -101,8 +101,8 @@ class ProposalModule(nn.Module):
 
         # --------- PROPOSAL GENERATION ---------
         if self.num_proposal > 1:
-            net = F.relu(self.bn1(self.conv1(features))) 
-            net = F.relu(self.bn2(self.conv2(net)))
+            net = self.bn1(F.relu(self.conv1(features))) 
+            net = self.bn2(F.relu(self.conv2(net)))
         else:
             net = F.relu(self.conv1(features))
             net = F.relu(self.conv2(net))

@@ -216,20 +216,13 @@ def get_perspective_data_from_model(model, xyz, axis_angles, theta, points=20000
 def get_perspective_data_from_model_seed(seed, model, points=20000, sample_strategy='uniform random', center=np.array([0, 0, 0]), scene_scale = 1):
 	np.random.seed(seed)
 
-	#print('center ', center)
-
-	axis_angles = np.random.uniform(-1, 1, size=3)
-	axis_angles /= np.linalg.norm(axis_angles)
+	#axis_angles = np.random.uniform(-1, 1, size=3)
+	#axis_angles /= np.linalg.norm(axis_angles)
+	#theta = np.random.uniform(0, np.pi * 2)
 
 	#testing xyz
-	#axis_angles = np.array([0., 0., 1.])
-
-	theta = np.random.uniform(0, np.pi * 2)
-
-	# euler_angles = np.zeros(3)
-	# euler_angles[0] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
-	# euler_angles[1] = -np.pi / 2 + np.random.uniform(0, 1) * np.pi
-	# euler_angles[2] = -np.pi + np.random.uniform(0, 1) * 2 * np.pi
+	axis_angles = np.array([0., 0., 1.])
+	theta = 1 #arbitrary
 
 	xyz = np.copy(center)
 	xyz[0] += np.random.uniform(0.06, 0.15) * (-1 if np.random.rand() < 0.5 else 1) * scene_scale
