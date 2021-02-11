@@ -185,7 +185,7 @@ def compute_rotation_loss_reprojection(end_points, object_assignment, objectness
     gt_theta = end_points['theta_label']
 
     pred_norms = torch.norm(pred_rotation_vector, dim=2).unsqueeze(2).repeat(1, 1, 3)
-    pred_rotation_vector_normalized = pred_rotation_vector / pred_norms
+    pred_rotation_vector_normalized = pred_rotation_vector / (pred_norms + 1e-6)
 
     pred_c = torch.cos(pred_theta)
     pred_s = torch.sin(pred_theta)

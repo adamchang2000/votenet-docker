@@ -44,6 +44,7 @@ def nn_distance(pc1, pc2, l1smooth=False, delta=1.0, l1=False):
         dist2: (B,M) torch float32 tensor
         idx2: (B,M) torch int64 tensor
     """
+
     N = pc1.shape[1]
     M = pc2.shape[1]
     pc1_expand_tile = pc1.unsqueeze(2).repeat(1,1,M,1)
@@ -58,6 +59,10 @@ def nn_distance(pc1, pc2, l1smooth=False, delta=1.0, l1=False):
         pc_dist = torch.sum(pc_diff**2, dim=-1) # (B,N,M)
     dist1, idx1 = torch.min(pc_dist, dim=2) # (B,N)
     dist2, idx2 = torch.min(pc_dist, dim=1) # (B,M)
+
+    assert not torch.any(torch.isnan(dist1))
+    assert not torch.any(torch.isnan(dist2))
+
     return dist1, idx1, dist2, idx2
 
 def demo_nn_distance():
