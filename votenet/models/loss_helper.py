@@ -14,10 +14,10 @@ sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 from nn_distance import nn_distance, huber_loss
 from scipy.spatial.transform import Rotation as R
 
-FAR_THRESHOLD = 0.05
-NEAR_THRESHOLD = 0.05
+FAR_THRESHOLD = 0.15
+NEAR_THRESHOLD = 0.15
 GT_VOTE_FACTOR = 1 # number of GT votes per point
-OBJECTNESS_CLS_WEIGHTS = [0.09,0.91] # put larger weights on positive objectness, #think about relationship between object_cls_weights and neg/pos_ratio
+OBJECTNESS_CLS_WEIGHTS = [0.3,0.7] # put larger weights on positive objectness, #think about relationship between object_cls_weights and neg/pos_ratio
 
 def compute_vote_loss(end_points):
     """ Compute vote loss: Match predicted votes to GT votes.
