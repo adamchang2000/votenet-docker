@@ -106,28 +106,28 @@ class OBJDetectionVotesDataset(Dataset):
         axis_angles = data['axis_angles']
         theta = data['theta']
 
-        if self.augment:
+        # if self.augment:
 
-            rot = R.from_rotvec(axis_angles * theta)
+        #     rot = R.from_rotvec(axis_angles * theta)
 
-            new_axis_angles = np.random.uniform(-1, 1, size=3)
-            new_axis_angles /= np.linalg.norm(new_axis_angles)
+        #     new_axis_angles = np.random.uniform(-1, 1, size=3)
+        #     new_axis_angles /= np.linalg.norm(new_axis_angles)
 
-            #testing only 1dof rotation
-            #new_axis_angles = axis_angles
+        #     #testing only 1dof rotation
+        #     #new_axis_angles = axis_angles
 
-            #print('dist from new to old ', np.linalg.norm(new_axis_angles - axis_angles))
+        #     #print('dist from new to old ', np.linalg.norm(new_axis_angles - axis_angles))
 
-            new_theta = np.random.uniform(0, np.pi * 2)
+        #     new_theta = np.random.uniform(0, np.pi * 2)
 
-            model_point_cloud_centered = model_point_cloud[:,:3] - box3d_centers
-            model_point_cloud[:,:3] = (axisAnglesToRotationMatrix(new_axis_angles, new_theta) @ model_point_cloud_centered.T).T + box3d_centers
+        #     model_point_cloud_centered = model_point_cloud[:,:3] - box3d_centers
+        #     model_point_cloud[:,:3] = (axisAnglesToRotationMatrix(new_axis_angles, new_theta) @ model_point_cloud_centered.T).T + box3d_centers
 
-            rot2 = R.from_rotvec(new_axis_angles * new_theta)
+        #     rot2 = R.from_rotvec(new_axis_angles * new_theta)
 
-            axis_angles = (rot2 * rot).as_rotvec()
-            theta = np.linalg.norm(axis_angles)
-            axis_angles /= np.linalg.norm(axis_angles)
+        #     axis_angles = (rot2 * rot).as_rotvec()
+        #     theta = np.linalg.norm(axis_angles)
+        #     axis_angles /= np.linalg.norm(axis_angles)
 
         votes = box3d_centers - model_point_cloud[:,:3]
 

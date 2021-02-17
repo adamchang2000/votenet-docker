@@ -151,8 +151,7 @@ class Pointnet2Backbone(nn.Module):
                 mlp=[input_feature_dim, 128, 128, 128],
                 use_xyz=True,
                 normalize_xyz=True,
-                use_relative_xyz=False,
-                dropout=0.7
+                use_relative_xyz=False
             )
 
         # self.sa2 = PointnetSAModuleVotes(

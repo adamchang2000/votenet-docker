@@ -57,8 +57,7 @@ class ProposalModule(nn.Module):
                 mlp=[self.seed_feat_dim, 256, 256, 256],
                 use_xyz=True,
                 normalize_xyz=True,
-                use_relative_xyz=False,
-                dropout=0.7
+                use_relative_xyz=False
             )
     
         # Object proposal/detection
