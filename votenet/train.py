@@ -344,30 +344,24 @@ def train_one_epoch():
         optimizer.zero_grad()
         inputs = {'point_clouds': batch_data_label['point_clouds']}
 
-        sample_iter = 0
-
-        while sample_iter < len(inputs['point_clouds']):
-            batch_chunk = {'point_clouds': inputs['point_clouds'][sample_iter:sample_iter+BATCH_CHUNK_SIZE]}
-
-            sample_count += len(batch_chunk['point_clouds'])
-            end_points = net(batch_chunk)
+        sample_count += len(inputs['point_clouds'])
+        end_points = net(inputs)
 
 
-            # Compute loss and gradients, update parameters.
-            for key in batch_data_label:
-                assert(key not in end_points)
-                end_points[key] = batch_data_label[key][sample_iter:sample_iter+BATCH_CHUNK_SIZE]
+        # Compute loss and gradients, update parameters.
+        for key in batch_data_label:
+            assert(key not in end_points)
+            end_points[key] = batch_data_label[key]
 
-            loss, end_points = criterion(end_points, DATASET_CONFIG)
-            loss.backward()
+        loss, end_points = criterion(end_points, DATASET_CONFIG)
+        loss.backward()
 
-            # Accumulate statistics and print out
-            for key in end_points:
-                if 'loss' in key or 'acc' in key or 'ratio' in key:
-                    if key not in stat_dict: stat_dict[key] = 0
-                    stat_dict[key] += end_points[key].item()
+        # Accumulate statistics and print out
+        for key in end_points:
+            if 'loss' in key or 'acc' in key or 'ratio' in key:
+                if key not in stat_dict: stat_dict[key] = 0
+                stat_dict[key] += end_points[key].item()
 
-            sample_iter += BATCH_CHUNK_SIZE
         optimizer.step()
             
         ITER_CNT += 1
@@ -398,37 +392,31 @@ def evaluate_one_epoch():
         # Forward pass
         inputs = {'point_clouds': batch_data_label['point_clouds']}
 
-        sample_iter = 0
+        sample_count += len(inputs['point_clouds'])
+        with torch.no_grad():
+            end_points = net(inputs)
 
-        while sample_iter < len(inputs['point_clouds']):
-            batch_chunk = {'point_clouds': inputs['point_clouds'][sample_iter:sample_iter+BATCH_CHUNK_SIZE]}
-            sample_count += len(batch_chunk['point_clouds'])
-            with torch.no_grad():
-                end_points = net(batch_chunk)
+        # Compute loss and gradients, update parameters.
+        for key in batch_data_label:
+            assert(key not in end_points)
+            end_points[key] = batch_data_label[key]
 
-            # Compute loss and gradients, update parameters.
-            for key in batch_data_label:
-                assert(key not in end_points)
-                end_points[key] = batch_data_label[key][sample_iter:sample_iter+BATCH_CHUNK_SIZE]
-
-            loss, end_points = criterion(end_points, DATASET_CONFIG)
+        loss, end_points = criterion(end_points, DATASET_CONFIG)
 
 
-            # Accumulate statistics and print out
-            for key in end_points:
-                if 'loss' in key or 'acc' in key or 'ratio' in key:
-                    if key not in stat_dict: stat_dict[key] = 0
-                    stat_dict[key] += end_points[key].item()
+        # Accumulate statistics and print out
+        for key in end_points:
+            if 'loss' in key or 'acc' in key or 'ratio' in key:
+                if key not in stat_dict: stat_dict[key] = 0
+                stat_dict[key] += end_points[key].item()
 
-            batch_pred_map_cls = parse_predictions(end_points, CONFIG_DICT) 
-            batch_gt_map_cls = parse_groundtruths(end_points, CONFIG_DICT) 
-            ap_calculator.step(batch_pred_map_cls, batch_gt_map_cls)
+        batch_pred_map_cls = parse_predictions(end_points, CONFIG_DICT) 
+        batch_gt_map_cls = parse_groundtruths(end_points, CONFIG_DICT) 
+        ap_calculator.step(batch_pred_map_cls, batch_gt_map_cls)
 
-            # Dump evaluation results for visualization
-            if FLAGS.dump_results and batch_idx == 0 and sample_iter == 0:
-                MODEL.dump_results(end_points, DUMP_DIR, DATASET_CONFIG) 
-
-            sample_iter += BATCH_CHUNK_SIZE
+        # Dump evaluation results for visualization
+        if FLAGS.dump_results and batch_idx == 0:
+            MODEL.dump_results(end_points, DUMP_DIR, DATASET_CONFIG) 
 
     # Log statistics
     TEST_VISUALIZER.log_scalars({key:stat_dict[key] / sample_count for key in stat_dict},
