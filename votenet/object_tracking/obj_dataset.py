@@ -129,6 +129,12 @@ class OBJDetectionVotesDataset(Dataset):
         #     theta = np.linalg.norm(axis_angles)
         #     axis_angles /= np.linalg.norm(axis_angles)
 
+        if self.augment:
+            translation = np.random.uniform(-1, 1, 3)
+            model_point_cloud[:,:3] += translation
+            box3d_centers[:,:3] += translation
+
+
         votes = box3d_centers - model_point_cloud[:,:3]
 
         votes = np.vstack((votes, np.zeros((scene_point_cloud.shape[0], 3))))
