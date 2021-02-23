@@ -9,3 +9,6 @@ python eval.py --dataset obj --objdata_path=object_tracking/model_data/ --model_
 
 new:
 python3.7 train.py --dataset obj --objdata_path=object_tracking/model_data/ --model_path=object_tracking/medical/medical_bulbs.ply --num_point=1500 --no_height --batch_size=32 --dump_dir=dump --dump_results --max_epoch 600
+
+scp -r roar@128.32.137.242:/home/roar/Desktop/OpenARK/Adam/votenet-docker/votenet/log .
+scp -r roar@128.32.137.242:/home/roar/Desktop/OpenARK/Adam/votenet-docker/votenet/dump .

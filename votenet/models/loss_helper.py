@@ -339,7 +339,7 @@ def get_loss(end_points, config):
     """
 
     #LOSS MULTIPLIERS
-    VOTE_LOSS_MULTIPLIER = 10 #votes are not even close to the object, different parts of the scene are voting for the object lol
+    VOTE_LOSS_MULTIPLIER = 1000 #votes are not even close to the object, different parts of the scene are voting for the object lol
     OBJECTNESS_LOSS_MULTIPLIER = 0.5
     BOX_LOSS_MULTIPLIER = 100
     ROTATION_LOSS_MULTIPLIER = 0.1

@@ -41,7 +41,7 @@ def main():
 	for key, train_plot in train_data.items():
 		eval_plot = eval_data[key]
 
-		data_train = np.array(train_plot)
+		data_train = np.array(train_plot[10:])
 		data_eval = np.array(eval_plot)
 
 		data_eval = np.repeat(data_eval, int(data_train.shape[0] / data_eval.shape[0]))
@@ -54,31 +54,6 @@ def main():
 		file_out = os.path.join(os.path.dirname(os.path.realpath(log_file)), 'Loss_' + key +'.png')
 		plt.savefig(file_out)
 		plt.close()
-	
-
-
-	# #plot data
-	# plt.rcParams["figure.figsize"] = (20,15)
-	# for key, val in eval_data.items():
-
-	# 	data = np.array(val)
-	# 	data /= max(np.max(data), 0.001)
-
-	# 	plt.plot(data, label=key)
-	# plt.title('Eval losses: ' + dir_title)
-	# plt.legend()
-	# plt.savefig(eval_out)
-	# plt.close()
-
-	# for key, val in train_data.items():
-	# 	data = np.array(val)
-	# 	data /= max(np.max(data), 0.001)
-
-	# 	plt.plot(data, label=key)
-	# plt.title('Train losses: ' +  dir_title)
-	# plt.legend()
-	# plt.savefig(train_out)
-	# plt.close()
 
 
 
